@@ -101,6 +101,13 @@ export default async function WorkPage({ params }: WorkPageProps) {
                   <button className="px-3 py-1 rounded-md bg-[#222227] border border-[#31313a] hover:bg-[#2b2b33] text-zinc-300 text-xs font-medium flex items-center gap-1.5 transition-colors">
                     <Heart className="w-3 h-3 text-rose-400" /> Follow Author
                   </button>
+
+                  <Link
+                    href={`/studio/${work.id}`}
+                    className="px-3 py-1 rounded-md bg-[#222227] border border-[#31313a] hover:bg-[#2b2b33] text-zinc-300 text-xs font-medium flex items-center gap-1.5 transition-colors"
+                  >
+                    <BookOpen className="w-3 h-3" /> Edit in Studio
+                  </Link>
                 </div>
               </div>
 

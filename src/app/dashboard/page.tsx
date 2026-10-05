@@ -155,10 +155,10 @@ export default function DashboardPage() {
             </div>
 
             <Link
-              href="/create"
-              className="px-3.5 py-1.5 rounded-lg bg-[#222227] hover:bg-[#2b2b33] text-zinc-200 text-xs font-medium"
+              href={`/studio/${myPublishedWork.id}`}
+              className="px-3.5 py-1.5 rounded-lg bg-[#222227] hover:bg-[#2b2b33] text-zinc-200 text-xs font-medium flex items-center gap-1.5"
             >
-              Manage Chapters
+              <PenTool className="w-3.5 h-3.5" /> Manage & Edit Chapters
             </Link>
           </div>
         )}
