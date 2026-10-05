@@ -1,32 +1,35 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Link from "next/link";
+import { ArrowRight, Layers } from "lucide-react";
 
 export default function GenresPage() {
   const GENRE_CATEGORIES = [
     {
       title: "Speculative Fiction",
       items: [
-        { name: "Fantasy", count: "1,420 works", desc: "Epic worldbuilding, high magic, and sword & sorcery." },
-        { name: "Dark Fantasy", count: "650 works", desc: "Grimdark worlds, necromancy, and moral ambiguity." },
-        { name: "Sci-Fi & Cyberpunk", count: "890 works", desc: "Mega-cities, synthetic intelligence, and space exploration." },
-        { name: "Progression & LitRPG", count: "720 works", desc: "Level-ups, cultivation, and magical mastery." },
+        { name: "Fantasy", slug: "fantasy", count: "1,420 works", desc: "Epic worldbuilding, high magic, and sword & sorcery." },
+        { name: "Action & Adventure", slug: "action-adventure", count: "890 works", desc: "Martial progression, high-stakes quests, and battles." },
+        { name: "Dark Fantasy", slug: "dark-fantasy", count: "650 works", desc: "Grimdark worlds, necromancy, and moral ambiguity." },
+        { name: "Sci-Fi & Cyberpunk", slug: "sci-fi", count: "890 works", desc: "Mega-cities, synthetic intelligence, and space exploration." },
       ],
     },
     {
-      title: "Visual Formats & Comics",
+      title: "Visual Formats & Light Novels",
       items: [
-        { name: "Manga & Comics", count: "980 series", desc: "Full-color vertical webtoons and episodic manga." },
-        { name: "Light Novels", count: "540 works", desc: "Fast-paced serialized fiction with character art." },
+        { name: "Manga & Comics", slug: "manga-comics", count: "980 series", desc: "Full-color vertical webtoons and episodic manga." },
+        { name: "Light Novels", slug: "light-novels", count: "540 works", desc: "Fast-paced serialized fiction with character art." },
       ],
     },
     {
-      title: "Drama & Suspense",
+      title: "Drama, Suspense & Prose",
       items: [
-        { name: "Romance", count: "840 works", desc: "Slow-burn relationships, rivalries, and emotional bonds." },
-        { name: "Mystery & Detective", count: "390 works", desc: "Clues, noir detectives, and supernatural puzzles." },
-        { name: "Horror & Supernatural", count: "480 works", desc: "Cosmic terror, eerie folklore, and psychological dread." },
-        { name: "Slice of Life", count: "610 works", desc: "Wholesome days, cozy crafting, and character moments." },
+        { name: "Romance", slug: "romance", count: "840 works", desc: "Slow-burn relationships, rivalries, and emotional bonds." },
+        { name: "Mystery & Detective", slug: "mystery-detective", count: "390 works", desc: "Clues, noir detectives, and supernatural puzzles." },
+        { name: "Horror & Supernatural", slug: "horror-supernatural", count: "480 works", desc: "Cosmic terror, eerie folklore, and psychological dread." },
+        { name: "Slice of Life", slug: "slice-of-life", count: "610 works", desc: "Wholesome days, cozy crafting, and character moments." },
+        { name: "Short Stories", slug: "short-stories", count: "1,100 pieces", desc: "Standalone short fiction and anthologies." },
+        { name: "Non-Fiction & Essays", slug: "non-fiction", count: "340 pieces", desc: "Craft guides, commentary, and essays." },
       ],
     },
   ];
@@ -41,7 +44,7 @@ export default function GenresPage() {
             Genres & Categories
           </h1>
           <p className="text-xs text-zinc-400 mt-0.5">
-            Explore stories organized across literary genres and formats.
+            Select a genre to explore stories, novels, manga, and essays within that universe.
           </p>
         </div>
 
@@ -52,14 +55,17 @@ export default function GenresPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {cat.items.map((item) => (
                   <Link
-                    key={item.name}
-                    href={`/discover?genre=${encodeURIComponent(item.name)}`}
+                    key={item.slug}
+                    href={`/genres/${item.slug}`}
                     className="p-4 rounded-xl bg-[#161619] hover:bg-[#1c1c20] border border-[#27272d] hover:border-[#3a3a44] transition-colors flex flex-col justify-between h-28 group"
                   >
                     <div>
-                      <h3 className="font-semibold text-xs text-zinc-200 group-hover:text-white transition-colors">
-                        {item.name}
-                      </h3>
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold text-xs text-zinc-200 group-hover:text-white transition-colors">
+                          {item.name}
+                        </h3>
+                        <ArrowRight className="w-3 h-3 text-zinc-600 group-hover:text-zinc-300 transition-colors" />
+                      </div>
                       <p className="text-[11px] text-zinc-500 mt-1 line-clamp-2 leading-relaxed">
                         {item.desc}
                       </p>
