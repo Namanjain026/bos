@@ -1,0 +1,495 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+enum WorkType {
+  NOVEL
+  NOVELLA
+  SHORT_STORY
+  POETRY
+  MANGA
+  COMIC
+  LIGHT_NOVEL
+  NON_FICTION
+}
+
+enum WorkStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  COMPLETED
+  ARCHIVED
+  FLAGGED
+  UNDER_REVIEW
+  RESTRICTED
+  REMOVED
+}
+
+enum ChapterStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  MEMBERS_FIRST
+  ARCHIVED
+}
+
+enum ReportTargetType {
+  WORK
+  CHAPTER
+  COMMENT
+  USER
+  COVER
+}
+
+enum ReportStatus {
+  OPEN
+  REVIEWING
+  RESOLVED
+  REJECTED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  TRIALING
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
+enum PurchaseStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id           String      @id @default(uuid())
+  username     String      @unique
+  displayName  String
+  email        String      @unique
+  passwordHash String
+  avatarUrl    String?
+  bio          String?
+  status       UserStatus  @default(ACTIVE)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  // Creator Relations
+  works             Work[]
+  series            Series[]
+  subscriptionPlans SubscriptionPlan[]
+  subscribers       Subscription[]     @relation("CreatorSubscribers")
+
+  // Reader Relations
+  follows           Follow[]           @relation("UserFollows")
+  followers         Follow[]           @relation("CreatorFollowers")
+  bookmarks         Bookmark[]
+  readingProgress   ReadingProgress[]
+  ratings           Rating[]
+  reviews           Review[]
+  comments          Comment[]
+  subscriptions     Subscription[]     @relation("UserSubscriptions")
+  entitlements      Entitlement[]
+  purchases         Purchase[]
+  notifications     Notification[]
+  analyticsEvents   AnalyticsEvent[]
+  reportsFiled      Report[]           @relation("ReporterRelation")
+  aiReviews         AIReview[]
+
+  @@index([username])
+  @@index([email])
+}
+
+model Series {
+  id          String   @id @default(uuid())
+  creatorId   String
+  title       String
+  slug        String   @unique
+  description String?
+  coverUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  creator User   @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  works   Work[]
+
+  @@index([creatorId])
+  @@index([slug])
+}
+
+model Work {
+  id               String     @id @default(uuid())
+  creatorId        String
+  seriesId         String?
+  type             WorkType
+  title            String
+  slug             String     @unique
+  description      String
+  coverUrl         String?
+  status           WorkStatus @default(DRAFT)
+  visibility       String     @default("PUBLIC") // PUBLIC, UNLISTED, PRIVATE
+  language         String     @default("en")
+  ageRating        String     @default("EVERYONE") // EVERYONE, TEEN, MATURE, EXPLICIT
+  isExclusive      Boolean    @default(false)
+  price            Decimal?   @db.Decimal(10, 2)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  publishedAt      DateTime?
+
+  creator          User              @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  series           Series?           @relation(fields: [seriesId], references: [id], onDelete: SetNull)
+  chapters         Chapter[]
+  genres           WorkGenre[]
+  tags             WorkTag[]
+  bookmarks        Bookmark[]
+  readingProgress  ReadingProgress[]
+  ratings          Rating[]
+  reviews          Review[]
+  entitlements     Entitlement[]
+  purchases        Purchase[]
+  analyticsEvents  AnalyticsEvent[]
+  aiReviews        AIReview[]
+
+  @@index([creatorId])
+  @@index([slug])
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Chapter {
+  id            String        @id @default(uuid())
+  workId        String
+  chapterNumber Float
+  title         String
+  body          String?       // Rich text or markdown for novels/stories
+  status        ChapterStatus @default(DRAFT)
+  releaseAt     DateTime?     // Scheduled publication time
+  publicAt      DateTime?     // For Members-First: time when chapter becomes free/public
+  wordCount     Int           @default(0)
+  isMembersOnly Boolean       @default(false)
+  price         Decimal?      @db.Decimal(10, 2)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  work            Work              @relation(fields: [workId], references: [id], onDelete: Cascade)
+  mangaPages      MangaPage[]
+  comments        Comment[]
+  bookmarks       Bookmark[]
+  readingProgress ReadingProgress[]
+  entitlements    Entitlement[]
+  purchases       Purchase[]
+  analyticsEvents AnalyticsEvent[]
+  aiReviews       AIReview[]
+
+  @@unique([workId, chapterNumber])
+  @@index([workId])
+  @@index([status])
+  @@index([publicAt])
+}
+
+model MangaPage {
+  id          String   @id @default(uuid())
+  chapterId   String
+  pageNumber  Int
+  assetUrl    String
+  width       Int?
+  height      Int?
+  createdAt   DateTime @default(now())
+
+  chapter Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  @@unique([chapterId, pageNumber])
+  @@index([chapterId])
+}
+
+model Genre {
+  id    String      @id @default(uuid())
+  name  String      @unique
+  slug  String      @unique
+  works WorkGenre[]
+
+  @@index([slug])
+}
+
+model WorkGenre {
+  workId  String
+  genreId String
+
+  work  Work  @relation(fields: [workId], references: [id], onDelete: Cascade)
+  genre Genre @relation(fields: [genreId], references: [id], onDelete: Cascade)
+
+  @@id([workId, genreId])
+  @@index([genreId])
+}
+
+model Tag {
+  id    String    @id @default(uuid())
+  name  String    @unique
+  slug  String    @unique
+  works WorkTag[]
+
+  @@index([slug])
+}
+
+model WorkTag {
+  workId String
+  tagId  String
+
+  work Work @relation(fields: [workId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([workId, tagId])
+  @@index([tagId])
+}
+
+model Follow {
+  followerId String
+  creatorId  String
+  createdAt  DateTime @default(now())
+
+  follower User @relation("UserFollows", fields: [followerId], references: [id], onDelete: Cascade)
+  creator  User @relation("CreatorFollowers", fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, creatorId])
+  @@index([creatorId])
+  @@index([followerId])
+}
+
+model Bookmark {
+  id        String   @id @default(uuid())
+  userId    String
+  workId    String
+  chapterId String?
+  createdAt DateTime @default(now())
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  work    Work     @relation(fields: [workId], references: [id], onDelete: Cascade)
+  chapter Chapter? @relation(fields: [chapterId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, workId])
+  @@index([userId])
+}
+
+model ReadingProgress {
+  id        String   @id @default(uuid())
+  userId    String
+  workId    String
+  chapterId String
+  position  Float    @default(0) // Scroll offset or manga page index
+  percent   Float    @default(0) // 0.0 - 100.0
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  work    Work    @relation(fields: [workId], references: [id], onDelete: Cascade)
+  chapter Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workId])
+  @@index([userId])
+  @@index([workId])
+}
+
+model Rating {
+  id        String   @id @default(uuid())
+  userId    String
+  workId    String
+  score     Int      // 1 to 5
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  work Work @relation(fields: [workId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workId])
+  @@index([workId])
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  userId    String
+  workId    String
+  body      String
+  status    String   @default("VISIBLE") // VISIBLE, FLAGGED, HIDDEN
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  work Work @relation(fields: [workId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workId])
+  @@index([workId])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  userId    String
+  chapterId String
+  parentId  String?
+  body      String
+  status    String   @default("VISIBLE")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chapter  Chapter   @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  Comment[] @relation("CommentReplies")
+
+  @@index([chapterId])
+  @@index([parentId])
+}
+
+model SubscriptionPlan {
+  id          String   @id @default(uuid())
+  creatorId   String
+  name        String
+  description String?
+  price       Decimal  @db.Decimal(10, 2)
+  currency    String   @default("USD")
+  benefits    String[]
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  creator       User           @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  subscriptions Subscription[]
+
+  @@index([creatorId])
+}
+
+model Subscription {
+  id           String             @id @default(uuid())
+  subscriberId String
+  creatorId    String
+  planId       String
+  status       SubscriptionStatus @default(ACTIVE)
+  startedAt    DateTime           @default(now())
+  renewsAt     DateTime?
+  cancelledAt  DateTime?
+
+  subscriber User             @relation("UserSubscriptions", fields: [subscriberId], references: [id], onDelete: Cascade)
+  creator    User             @relation("CreatorSubscribers", fields: [creatorId], references: [id], onDelete: Cascade)
+  plan       SubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Restrict)
+
+  @@index([subscriberId])
+  @@index([creatorId])
+  @@index([status])
+}
+
+model Entitlement {
+  id        String    @id @default(uuid())
+  userId    String
+  workId    String
+  chapterId String?
+  source    String    // PURCHASE, SUBSCRIPTION, PROMO, PLATFORM_GRANT
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  work    Work     @relation(fields: [workId], references: [id], onDelete: Cascade)
+  chapter Chapter? @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workId, chapterId, source])
+  @@index([userId])
+  @@index([workId])
+}
+
+model Purchase {
+  id        String         @id @default(uuid())
+  userId    String
+  workId    String
+  chapterId String?
+  amount    Decimal        @db.Decimal(10, 2)
+  currency  String         @default("USD")
+  paymentId String         @unique
+  status    PurchaseStatus @default(PENDING)
+  createdAt DateTime       @default(now())
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  work    Work     @relation(fields: [workId], references: [id], onDelete: Cascade)
+  chapter Chapter? @relation(fields: [chapterId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([workId])
+}
+
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String
+  type      String    // NEW_CHAPTER, NEW_FOLLOWER, COMMENT_REPLY, AI_COMPLETE, MEMBERS_FIRST, SYSTEM
+  title     String
+  message   String
+  payload   Json?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([readAt])
+}
+
+model AnalyticsEvent {
+  id         String   @id @default(uuid())
+  userId     String?
+  workId     String?
+  chapterId  String?
+  eventType  String   // VIEW, READ_COMPLETE, BOOKMARK_ADD, TIME_SPENT
+  durationMs Int?
+  sessionId  String?
+  createdAt  DateTime @default(now())
+
+  user    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  work    Work?    @relation(fields: [workId], references: [id], onDelete: SetNull)
+  chapter Chapter? @relation(fields: [chapterId], references: [id], onDelete: SetNull)
+
+  @@index([workId])
+  @@index([eventType])
+  @@index([createdAt])
+}
+
+model Report {
+  id         String           @id @default(uuid())
+  reporterId String
+  targetType ReportTargetType
+  targetId   String
+  reason     String
+  status     ReportStatus     @default(OPEN)
+  notes      String?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  reporter User @relation("ReporterRelation", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([targetType, targetId])
+}
+
+model AIReview {
+  id            String   @id @default(uuid())
+  userId        String
+  workId        String
+  chapterId     String?
+  scoreJson     Json     // { overall, pacing, dialogue, characterization, worldBuilding, readability }
+  critiqueJson  Json     // { strengths, weaknesses, suggestions, themes }
+  model         String
+  promptVersion String   @default("v1.0")
+  createdAt     DateTime @default(now())
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  work    Work     @relation(fields: [workId], references: [id], onDelete: Cascade)
+  chapter Chapter? @relation(fields: [chapterId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([workId])
+}
