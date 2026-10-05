@@ -4,17 +4,16 @@ import Footer from "@/components/Footer";
 import BookCard from "@/components/BookCard";
 import { MOCK_WORKS } from "@/lib/mock-data";
 import {
-  Sparkles,
   TrendingUp,
-  Flame,
   Star,
   BookOpen,
   ArrowRight,
-  ShieldCheck,
   Zap,
   Layers,
   Compass,
   PenTool,
+  Clock,
+  ShieldCheck,
 } from "lucide-react";
 
 export default function HomePage() {
@@ -23,310 +22,223 @@ export default function HomePage() {
   const novelWorks = MOCK_WORKS.filter((w) => w.type === "NOVEL" || w.type === "LIGHT_NOVEL" || w.type === "SHORT_STORY");
 
   const genresList = [
-    { name: "Fantasy", count: "1.4k stories", color: "from-violet-600/20 to-purple-900/30 border-violet-500/30 text-violet-300" },
-    { name: "Manga & Comics", count: "890 series", color: "from-fuchsia-600/20 to-pink-900/30 border-fuchsia-500/30 text-fuchsia-300" },
-    { name: "Sci-Fi & Cyberpunk", count: "620 stories", color: "from-cyan-600/20 to-blue-900/30 border-cyan-500/30 text-cyan-300" },
-    { name: "Horror & Mystery", count: "430 tales", color: "from-rose-600/20 to-red-900/30 border-rose-500/30 text-rose-300" },
-    { name: "Light Novels", count: "780 works", color: "from-amber-600/20 to-orange-900/30 border-amber-500/30 text-amber-300" },
-    { name: "Short Stories", count: "1.1k pieces", color: "from-emerald-600/20 to-teal-900/30 border-emerald-500/30 text-emerald-300" },
+    { name: "Fantasy", count: "1,420 works" },
+    { name: "Manga & Comics", count: "890 series" },
+    { name: "Sci-Fi", count: "620 works" },
+    { name: "Horror & Mystery", count: "430 works" },
+    { name: "Light Novels", count: "780 works" },
+    { name: "Short Stories", count: "1,100 pieces" },
   ];
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-zinc-100 flex flex-col selection:bg-violet-600 selection:text-white">
+    <div className="min-h-screen bg-[#0f0f11] text-zinc-100 flex flex-col selection:bg-zinc-700">
       <Navbar />
 
       <main className="flex-1 space-y-16 pb-16">
-        {/* Hero Section */}
-        <section className="relative px-4 sm:px-6 lg:px-8 pt-8 max-w-7xl mx-auto">
-          <div className="relative rounded-3xl overflow-hidden glass-panel border border-zinc-800 bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 p-6 sm:p-10 lg:p-14 shadow-2xl">
-            {/* Background Ambient Glows */}
-            <div className="absolute -top-24 -left-24 w-96 h-96 bg-violet-600/20 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-fuchsia-600/20 rounded-full blur-3xl pointer-events-none" />
-
-            <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-              {/* Left Column: Headline & Value Prop */}
+        {/* Editorial Hero Section */}
+        <section className="px-4 sm:px-6 lg:px-8 pt-8 max-w-7xl mx-auto">
+          <div className="rounded-2xl border border-[#27272d] bg-[#161619] p-6 sm:p-10 lg:p-12">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+              {/* Left Column: Mission & Headline */}
               <div className="lg:col-span-7 space-y-6">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-950/80 border border-violet-700/50 text-violet-300 text-xs font-semibold">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                  <span>The Creator-First Publishing Platform</span>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#222227] border border-[#2f2f36] text-zinc-300 text-xs font-mono">
+                  <span>Open Publishing Platform</span>
                 </div>
 
-                <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1]">
-                  Read, Write & Monetize <br />
-                  <span className="text-gradient">Without Boundaries.</span>
+                <h1 className="text-3xl sm:text-5xl font-serif font-normal tracking-tight text-white leading-[1.15]">
+                  Stories written chapter by chapter. <br />
+                  <span className="italic text-zinc-400">Read, publish, and support.</span>
                 </h1>
 
-                <p className="text-sm sm:text-base text-zinc-300 max-w-xl leading-relaxed">
-                  Discover serialized novels, full-color manga, light novels, and short stories. Support authors through Members-First early access and hone your craft with AI-powered manuscript critique.
+                <p className="text-sm text-zinc-300 max-w-xl leading-relaxed">
+                  Book of Shades brings together serialized novels, original webcomics, and short fiction with creator-controlled early access, clean reading tools, and editorial manuscript critique.
                 </p>
 
                 {/* Primary CTA Buttons */}
-                <div className="flex flex-wrap items-center gap-4 pt-2">
+                <div className="flex flex-wrap items-center gap-3 pt-2">
                   <Link
                     href="/discover"
-                    className="px-6 py-3 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-bold text-sm shadow-lg shadow-violet-600/30 flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
+                    className="px-5 py-2.5 rounded-lg bg-white hover:bg-zinc-200 text-zinc-950 font-semibold text-xs flex items-center gap-2 transition-colors"
                   >
-                    <Compass className="w-4 h-4" /> Start Reading
+                    <Compass className="w-3.5 h-3.5" /> Start Reading
                   </Link>
 
                   <Link
                     href="/create"
-                    className="px-6 py-3 rounded-full bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 font-bold text-sm flex items-center gap-2 transition-all hover:border-violet-500"
+                    className="px-5 py-2.5 rounded-lg bg-[#222227] hover:bg-[#2a2a30] border border-[#34343d] text-zinc-200 font-semibold text-xs flex items-center gap-2 transition-colors"
                   >
-                    <PenTool className="w-4 h-4 text-violet-400" /> Publish Your Work
+                    <PenTool className="w-3.5 h-3.5" /> Creator Studio
                   </Link>
                 </div>
 
-                {/* Micro Metrics Trust Badges */}
-                <div className="grid grid-cols-3 gap-4 pt-4 border-t border-zinc-800/80 text-left max-w-lg">
+                {/* Micro Stats */}
+                <div className="grid grid-cols-3 gap-4 pt-4 border-t border-[#27272d] text-left max-w-md font-mono text-xs">
                   <div>
-                    <span className="text-lg sm:text-xl font-bold text-white">100%</span>
-                    <p className="text-[11px] text-zinc-400">Creator Owned</p>
+                    <span className="text-base font-bold text-white block">100%</span>
+                    <span className="text-zinc-500 text-[11px]">Creator Owned</span>
                   </div>
                   <div>
-                    <span className="text-lg sm:text-xl font-bold text-violet-400">Dual</span>
-                    <p className="text-[11px] text-zinc-400">Text & Manga Engine</p>
+                    <span className="text-base font-bold text-zinc-200 block">Dual</span>
+                    <span className="text-zinc-500 text-[11px]">Text & Manga</span>
                   </div>
                   <div>
-                    <span className="text-lg sm:text-xl font-bold text-amber-400">0% Cut</span>
-                    <p className="text-[11px] text-zinc-400">For Platform Free Tier</p>
+                    <span className="text-base font-bold text-zinc-200 block">Direct</span>
+                    <span className="text-zinc-500 text-[11px]">Members First</span>
                   </div>
                 </div>
               </div>
 
-              {/* Right Column: Featured Spotlight Card */}
+              {/* Right Column: Featured Serial Card */}
               <div className="lg:col-span-5">
-                <div className="relative group p-1.5 rounded-3xl bg-gradient-to-br from-violet-500/40 via-fuchsia-500/20 to-amber-500/40 shadow-2xl">
-                  <div className="bg-zinc-950 rounded-[22px] overflow-hidden p-5 flex flex-col gap-4">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="flex items-center gap-1 font-bold text-amber-400">
-                        <Flame className="w-4 h-4 fill-amber-400" /> #1 Featured Serial
-                      </span>
-                      <span className="px-2 py-0.5 rounded-full bg-violet-950 border border-violet-800 text-violet-300 font-semibold text-[10px]">
-                        Members First Active
-                      </span>
-                    </div>
-
-                    <div className="relative aspect-[16/9] rounded-xl overflow-hidden">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={featuredWork.coverUrl!}
-                        alt={featuredWork.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent" />
-                      <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-1 bg-black/80 px-2 py-1 rounded-md text-amber-400 font-bold">
-                          <Star className="w-3.5 h-3.5 fill-current" /> {featuredWork.averageRating}
-                        </div>
-                        <span className="bg-black/80 px-2 py-1 rounded-md text-zinc-300 text-[11px]">
-                          {featuredWork.chapterCount} Chapters
-                        </span>
-                      </div>
-                    </div>
-
-                    <div>
-                      <h3 className="font-bold text-lg text-white group-hover:text-violet-400 transition-colors">
-                        {featuredWork.title}
-                      </h3>
-                      <p className="text-xs text-zinc-400 mt-1 line-clamp-2">
-                        {featuredWork.description}
-                      </p>
-                    </div>
-
-                    <Link
-                      href={`/work/${featuredWork.slug}`}
-                      className="w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-violet-600/30 transition-all"
-                    >
-                      <span>Read Episode 1 Free</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
+                <div className="bg-[#1a1a1e] border border-[#2f2f37] rounded-xl p-5 space-y-4">
+                  <div className="flex items-center justify-between text-xs font-mono">
+                    <span className="text-zinc-400">#1 Trending Serial</span>
+                    <span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 text-[10px]">
+                      Members First
+                    </span>
                   </div>
+
+                  <div className="relative aspect-[16/9] rounded-lg overflow-hidden bg-black">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={featuredWork.coverUrl!}
+                      alt={featuredWork.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                    <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between text-xs font-mono">
+                      <div className="flex items-center gap-1 bg-black/80 px-2 py-0.5 rounded text-amber-400 font-bold">
+                        <Star className="w-3 h-3 fill-current" /> {featuredWork.averageRating}
+                      </div>
+                      <span className="bg-black/80 px-2 py-0.5 rounded text-zinc-300 text-[10px]">
+                        {featuredWork.chapterCount} Chapters
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="font-semibold text-base text-white">
+                      {featuredWork.title}
+                    </h3>
+                    <p className="text-xs text-zinc-400 mt-1 line-clamp-2 leading-relaxed">
+                      {featuredWork.description}
+                    </p>
+                  </div>
+
+                  <Link
+                    href={`/work/${featuredWork.slug}`}
+                    className="w-full py-2 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors"
+                  >
+                    <span>Read First Chapter</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Continue Reading Bar (Quick Resume) */}
+        {/* Quick Resume Bar */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="p-4 rounded-xl bg-[#161619] border border-[#27272d] flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3 w-full sm:w-auto">
-              <div className="w-10 h-10 rounded-xl bg-violet-600/20 border border-violet-500/40 flex items-center justify-center text-violet-400 shrink-0">
-                <BookOpen className="w-5 h-5" />
+              <div className="w-8 h-8 rounded-lg bg-[#222227] flex items-center justify-center text-zinc-300 shrink-0">
+                <BookOpen className="w-4 h-4" />
               </div>
               <div className="min-w-0">
-                <span className="text-[10px] uppercase tracking-wider text-violet-400 font-bold">Continue Reading</span>
-                <p className="text-sm font-semibold text-zinc-200 truncate">{featuredWork.title} — Chapter 1</p>
+                <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-mono font-semibold">Reading Progress</span>
+                <p className="text-xs sm:text-sm font-medium text-zinc-200 truncate">{featuredWork.title} — Chapter 1</p>
               </div>
             </div>
 
             <Link
               href={`/read/${featuredWork.id}/ch-1`}
-              className="w-full sm:w-auto px-5 py-2 rounded-xl bg-zinc-800 hover:bg-violet-600 text-xs font-semibold text-white transition-all text-center shrink-0"
+              className="w-full sm:w-auto px-4 py-1.5 rounded-lg bg-[#24242a] hover:bg-[#2e2e36] text-xs font-medium text-zinc-200 transition-colors text-center shrink-0 border border-[#31313a]"
             >
-              Resume (65% left)
+              Resume Reading (65%)
             </Link>
           </div>
         </section>
 
-        {/* Trending Works Section (Deterministic Algorithm) */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                <TrendingUp className="w-5 h-5" />
-              </div>
-              <div>
-                <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-                  Trending Now
-                </h2>
-                <p className="text-xs text-zinc-400">Ranked by recent velocity, reads, and engagement</p>
-              </div>
+        {/* Trending Works Section */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#27272d]">
+            <div>
+              <h2 className="text-lg font-bold text-white tracking-tight">
+                Trending Serials & Stories
+              </h2>
+              <p className="text-xs text-zinc-400">Updated hourly based on reader completion and activity</p>
             </div>
 
             <Link
               href="/rankings"
-              className="text-xs font-semibold text-violet-400 hover:text-violet-300 flex items-center gap-1 group"
+              className="text-xs font-medium text-zinc-400 hover:text-white flex items-center gap-1"
             >
-              View Leaderboard <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              All Rankings <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {MOCK_WORKS.map((work) => (
               <BookCard key={work.id} work={work} />
             ))}
           </div>
         </section>
 
-        {/* Manga & Visual Webtoons Showcase */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-fuchsia-500/20 text-fuchsia-400 border border-fuchsia-500/30">
-                <Zap className="w-5 h-5" />
-              </div>
-              <div>
-                <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-                  Manga & Webtoons
-                </h2>
-                <p className="text-xs text-zinc-400">Full-color visual serials with vertical scroll mode</p>
-              </div>
+        {/* Manga & Visual Comics Section */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#27272d]">
+            <div>
+              <h2 className="text-lg font-bold text-white tracking-tight">
+                Manga & Webcomics
+              </h2>
+              <p className="text-xs text-zinc-400">Sequential art with vertical scroll and page-by-page modes</p>
             </div>
 
             <Link
               href="/discover?type=MANGA"
-              className="text-xs font-semibold text-fuchsia-400 hover:text-fuchsia-300 flex items-center gap-1 group"
+              className="text-xs font-medium text-zinc-400 hover:text-white flex items-center gap-1"
             >
-              Explore Manga <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              Browse Comics <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {mangaWorks.concat(MOCK_WORKS.slice(0, 1)).map((work, idx) => (
               <BookCard key={`${work.id}-${idx}`} work={work} aspectRatio="wide" />
             ))}
           </div>
         </section>
 
-        {/* Explore By Genre Grid */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-violet-500/20 text-violet-400 border border-violet-500/30">
-                <Layers className="w-5 h-5" />
-              </div>
-              <div>
-                <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-                  Browse by Universe & Genre
-                </h2>
-                <p className="text-xs text-zinc-400">From high fantasy epics to cyberpunk mysteries</p>
-              </div>
+        {/* Browse by Genre */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#27272d]">
+            <div>
+              <h2 className="text-lg font-bold text-white tracking-tight">
+                Browse Genres
+              </h2>
+              <p className="text-xs text-zinc-400">Find your next obsession by category</p>
             </div>
 
             <Link
               href="/genres"
-              className="text-xs font-semibold text-violet-400 hover:text-violet-300 flex items-center gap-1"
+              className="text-xs font-medium text-zinc-400 hover:text-white flex items-center gap-1"
             >
-              All Genres
+              Directory <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {genresList.map((g) => (
               <Link
                 key={g.name}
                 href={`/discover?genre=${encodeURIComponent(g.name)}`}
-                className={`p-4 rounded-2xl bg-gradient-to-b border ${g.color} hover:scale-105 transition-transform flex flex-col justify-between h-28 shadow-sm`}
+                className="p-3.5 rounded-xl bg-[#161619] hover:bg-[#1f1f24] border border-[#27272d] hover:border-[#3d3d46] transition-colors flex flex-col justify-between h-24"
               >
-                <span className="font-bold text-sm text-zinc-100">{g.name}</span>
-                <span className="text-[11px] opacity-70">{g.count}</span>
+                <span className="font-semibold text-xs text-zinc-200">{g.name}</span>
+                <span className="text-[10px] text-zinc-500 font-mono">{g.count}</span>
               </Link>
             ))}
-          </div>
-        </section>
-
-        {/* Creator Studio & AI "Rate My Book" Callout */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="relative rounded-3xl overflow-hidden glass-panel border border-violet-800/40 bg-gradient-to-r from-violet-950/50 via-zinc-950 to-fuchsia-950/50 p-8 sm:p-12">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-              <div className="space-y-4">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-900/60 border border-violet-700/60 text-violet-300 text-xs font-semibold">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" /> AI Rate My Book Suite
-                </div>
-                <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-                  Actionable AI Feedback for Authors
-                </h2>
-                <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
-                  Before publishing your chapter, run it through our multi-dimensional literary critique engine. Get instant feedback on pacing, dialogue naturalism, character voice, and story structure.
-                </p>
-                <div className="pt-2 flex flex-wrap items-center gap-3">
-                  <Link
-                    href="/create"
-                    className="px-6 py-2.5 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white text-xs font-bold shadow-lg shadow-violet-600/30 flex items-center gap-2"
-                  >
-                    <PenTool className="w-3.5 h-3.5" /> Test Manuscript in Studio
-                  </Link>
-                </div>
-              </div>
-
-              <div className="p-5 rounded-2xl bg-zinc-950/80 border border-zinc-800 space-y-3 font-mono text-xs text-zinc-300">
-                <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
-                  <span className="text-violet-400 font-semibold flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5" /> Craft Diagnostic
-                  </span>
-                  <span className="text-[10px] bg-emerald-950 text-emerald-400 px-2 py-0.5 rounded border border-emerald-800">
-                    Ready
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-[11px]">
-                    <span className="text-zinc-400">Pacing & Tension</span>
-                    <span className="text-amber-400 font-bold">92 / 100</span>
-                  </div>
-                  <div className="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-amber-400 h-full w-[92%]" />
-                  </div>
-
-                  <div className="flex justify-between text-[11px] pt-1">
-                    <span className="text-zinc-400">Dialogue Naturalism</span>
-                    <span className="text-violet-400 font-bold">88 / 100</span>
-                  </div>
-                  <div className="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-violet-400 h-full w-[88%]" />
-                  </div>
-
-                  <div className="flex justify-between text-[11px] pt-1">
-                    <span className="text-zinc-400">World-Building Balance</span>
-                    <span className="text-emerald-400 font-bold">95 / 100</span>
-                  </div>
-                  <div className="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-emerald-400 h-full w-[95%]" />
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </section>
       </main>

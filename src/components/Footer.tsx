@@ -1,73 +1,61 @@
 import Link from "next/link";
-import { BookOpen, Sparkles, Shield, Heart } from "lucide-react";
+import { BookOpen } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="border-t border-zinc-800/80 bg-zinc-950/60 pt-12 pb-8 mt-20 text-zinc-400 text-sm">
+    <footer className="border-t border-[#24242a] bg-[#0c0c0e] pt-12 pb-8 mt-20 text-zinc-400 text-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-8 pb-12">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8 pb-10">
           {/* Brand Col */}
-          <div className="md:col-span-2 space-y-4">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-violet-600 to-amber-500 flex items-center justify-center">
-                <BookOpen className="w-4 h-4 text-white" />
+          <div className="md:col-span-2 space-y-3">
+            <Link href="/" className="flex items-center gap-2.5">
+              <div className="w-6 h-6 rounded bg-zinc-100 text-zinc-950 flex items-center justify-center font-bold text-xs">
+                <BookOpen className="w-3.5 h-3.5" />
               </div>
-              <span className="text-base font-bold text-white tracking-tight">
-                BOOK OF <span className="text-violet-400">SHADES</span>
+              <span className="text-sm font-bold text-white tracking-tight">
+                Book of Shades
               </span>
             </Link>
-            <p className="text-xs text-zinc-400 leading-relaxed max-w-sm">
-              A creator-first social publishing platform where everyone can read, write, publish, and monetize serialized novels, manga, webtoons, light novels, and short stories.
+            <p className="text-xs text-zinc-500 leading-relaxed max-w-sm">
+              An open platform for reading and publishing serialized novels, original webcomics, manga, and short fiction.
             </p>
-            <div className="flex items-center gap-2 text-xs text-zinc-400">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-950/60 border border-violet-800/50 text-violet-300">
-                <Sparkles className="w-3 h-3" /> AI Critique Suite
-              </span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-800/50 text-emerald-300">
-                <Shield className="w-3 h-3" /> Creator Owned
-              </span>
-            </div>
           </div>
 
           {/* Column 1: Read */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-200">Read</h4>
-            <ul className="space-y-2 text-xs">
-              <li><Link href="/discover" className="hover:text-violet-400 transition-colors">Popular Novels</Link></li>
-              <li><Link href="/discover?type=MANGA" className="hover:text-violet-400 transition-colors">Manga & Comics</Link></li>
-              <li><Link href="/rankings" className="hover:text-violet-400 transition-colors">Trending Leaderboard</Link></li>
-              <li><Link href="/genres" className="hover:text-violet-400 transition-colors">Genre Directory</Link></li>
+          <div className="space-y-2.5">
+            <h4 className="text-[11px] font-bold uppercase tracking-wider text-zinc-300 font-mono">Read</h4>
+            <ul className="space-y-1.5 text-zinc-400">
+              <li><Link href="/discover" className="hover:text-white transition-colors">Novels</Link></li>
+              <li><Link href="/discover?type=MANGA" className="hover:text-white transition-colors">Manga & Webcomics</Link></li>
+              <li><Link href="/rankings" className="hover:text-white transition-colors">Rankings</Link></li>
+              <li><Link href="/genres" className="hover:text-white transition-colors">Genres</Link></li>
             </ul>
           </div>
 
-          {/* Column 2: Creators */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-200">Creators</h4>
-            <ul className="space-y-2 text-xs">
-              <li><Link href="/create" className="hover:text-violet-400 transition-colors">Publish a Work</Link></li>
-              <li><Link href="/create?tab=ai" className="hover:text-violet-400 transition-colors">AI Rate My Book</Link></li>
-              <li><Link href="/dashboard" className="hover:text-violet-400 transition-colors">Creator Studio & Stats</Link></li>
-              <li><Link href="/monetization" className="hover:text-violet-400 transition-colors">Members First Setup</Link></li>
+          {/* Column 2: Authors */}
+          <div className="space-y-2.5">
+            <h4 className="text-[11px] font-bold uppercase tracking-wider text-zinc-300 font-mono">Authors</h4>
+            <ul className="space-y-1.5 text-zinc-400">
+              <li><Link href="/create" className="hover:text-white transition-colors">Author Studio</Link></li>
+              <li><Link href="/dashboard" className="hover:text-white transition-colors">Dashboard</Link></li>
+              <li><Link href="/monetization" className="hover:text-white transition-colors">Members First</Link></li>
             </ul>
           </div>
 
           {/* Column 3: Platform */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-200">Platform</h4>
-            <ul className="space-y-2 text-xs">
-              <li><Link href="/about" className="hover:text-violet-400 transition-colors">About Book of Shades</Link></li>
-              <li><Link href="/terms" className="hover:text-violet-400 transition-colors">Terms of Service</Link></li>
-              <li><Link href="/privacy" className="hover:text-violet-400 transition-colors">Privacy Policy</Link></li>
-              <li><Link href="/moderation" className="hover:text-violet-400 transition-colors">Content Guidelines</Link></li>
+          <div className="space-y-2.5">
+            <h4 className="text-[11px] font-bold uppercase tracking-wider text-zinc-300 font-mono">Platform</h4>
+            <ul className="space-y-1.5 text-zinc-400">
+              <li><Link href="/about" className="hover:text-white transition-colors">About</Link></li>
+              <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
+              <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/moderation" className="hover:text-white transition-colors">Guidelines</Link></li>
             </ul>
           </div>
         </div>
 
-        <div className="border-t border-zinc-800/80 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-400 gap-4">
-          <p>© {new Date().getFullYear()} Book of Shades Platform. All rights reserved.</p>
-          <p className="flex items-center gap-1 text-zinc-400">
-            Crafted with <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" /> for storytellers and readers worldwide.
-          </p>
+        <div className="border-t border-[#24242a] pt-6 flex flex-col sm:flex-row items-center justify-between text-zinc-500 gap-3 font-mono text-[11px]">
+          <p>© {new Date().getFullYear()} Book of Shades. All creator works remain the property of their respective authors.</p>
         </div>
       </div>
     </footer>

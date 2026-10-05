@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Star, BookOpen, Clock, Sparkles } from "lucide-react";
+import { Star, BookOpen, Clock } from "lucide-react";
 import { WorkCardData } from "@/types";
 
 interface BookCardProps {
@@ -8,12 +8,10 @@ interface BookCardProps {
 }
 
 export default function BookCard({ work, aspectRatio = "portrait" }: BookCardProps) {
-  const isManga = work.type === "MANGA" || work.type === "COMIC";
-
   return (
     <Link
       href={`/work/${work.slug}`}
-      className="group flex flex-col bg-zinc-900/60 hover:bg-zinc-900 border border-zinc-800/80 hover:border-violet-500/50 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-violet-950/30 hover:-translate-y-1"
+      className="group flex flex-col bg-[#161619] hover:bg-[#1a1a1e] border border-[#27272d] hover:border-[#3d3d46] rounded-xl overflow-hidden transition-all duration-200"
     >
       {/* Cover Image Container */}
       <div
@@ -26,68 +24,61 @@ export default function BookCard({ work, aspectRatio = "portrait" }: BookCardPro
           <img
             src={work.coverUrl}
             alt={work.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+            className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300 ease-out"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-zinc-800 to-zinc-900 text-zinc-600">
-            <BookOpen className="w-12 h-12" />
+          <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-zinc-600">
+            <BookOpen className="w-10 h-10" />
           </div>
         )}
 
-        {/* Gradient Overlay for Text Legibility */}
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent opacity-80" />
+        {/* Subtle Dark Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
 
-        {/* Type & Exclusive Badges */}
-        <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
-          <span
-            className={`text-[11px] font-bold px-2 py-0.5 rounded-md shadow-md backdrop-blur-md ${
-              isManga
-                ? "bg-fuchsia-600/90 text-white"
-                : "bg-violet-600/90 text-white"
-            }`}
-          >
+        {/* Format Badge */}
+        <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1.5">
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-black/80 text-zinc-200 border border-white/10 uppercase tracking-wider font-mono">
             {work.type.replace("_", " ")}
           </span>
           {work.isExclusive && (
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-500/90 text-zinc-950 flex items-center gap-1 shadow-md backdrop-blur-md">
-              <Sparkles className="w-3 h-3 fill-current" /> Exclusive
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-amber-950/90 text-amber-300 border border-amber-800/60 font-mono">
+              Exclusive
             </span>
           )}
         </div>
 
-        {/* Rating Pill */}
-        <div className="absolute bottom-3 left-3 bg-zinc-950/80 backdrop-blur-md border border-zinc-800 px-2 py-0.5 rounded-lg flex items-center gap-1.5 shadow">
-          <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-          <span className="text-xs font-bold text-zinc-100">
+        {/* Rating */}
+        <div className="absolute bottom-2.5 left-2.5 bg-black/80 border border-white/10 px-2 py-0.5 rounded flex items-center gap-1.5">
+          <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+          <span className="text-xs font-bold text-zinc-200 font-mono">
             {work.averageRating.toFixed(1)}
           </span>
-          <span className="text-[10px] text-zinc-400">({work.ratingCount})</span>
         </div>
       </div>
 
       {/* Card Body */}
-      <div className="p-4 flex flex-col flex-1 justify-between gap-3">
+      <div className="p-3.5 flex flex-col flex-1 justify-between gap-3">
         <div>
           {/* Title */}
-          <h3 className="font-semibold text-zinc-100 text-base line-clamp-1 group-hover:text-violet-400 transition-colors">
+          <h3 className="font-semibold text-zinc-100 text-sm line-clamp-1 group-hover:text-white transition-colors">
             {work.title}
           </h3>
 
           {/* Creator Attribution */}
-          <div className="flex items-center gap-2 mt-1.5">
+          <div className="flex items-center gap-2 mt-1">
             {work.creator.avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={work.creator.avatarUrl}
                 alt={work.creator.displayName}
-                className="w-4 h-4 rounded-full object-cover"
+                className="w-3.5 h-3.5 rounded-full object-cover"
               />
             ) : (
-              <div className="w-4 h-4 rounded-full bg-violet-600/50 flex items-center justify-center text-[9px] font-bold text-white">
+              <div className="w-3.5 h-3.5 rounded-full bg-zinc-700 flex items-center justify-center text-[8px] font-bold text-white">
                 {work.creator.displayName.charAt(0)}
               </div>
             )}
-            <span className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors">
+            <span className="text-xs text-zinc-400">
               {work.creator.displayName}
             </span>
           </div>
@@ -99,15 +90,9 @@ export default function BookCard({ work, aspectRatio = "portrait" }: BookCardPro
         </div>
 
         {/* Footer Meta */}
-        <div className="pt-2 border-t border-zinc-800/80 flex items-center justify-between text-[11px] text-zinc-400">
-          <span className="flex items-center gap-1">
-            <BookOpen className="w-3.5 h-3.5 text-zinc-400" />
-            {work.chapterCount} Chapters
-          </span>
-          <span className="flex items-center gap-1 text-zinc-400">
-            <Clock className="w-3 h-3" />
-            {work.updatedAt}
-          </span>
+        <div className="pt-2 border-t border-[#27272d] flex items-center justify-between text-[11px] text-zinc-400 font-mono">
+          <span>{work.chapterCount} Chapters</span>
+          <span>{work.updatedAt}</span>
         </div>
       </div>
     </Link>
