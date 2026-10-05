@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BookCard from "@/components/BookCard";
 import { MOCK_WORKS } from "@/lib/mock-data";
+import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import {
   BookOpen,
@@ -12,42 +13,92 @@ import {
   PenTool,
   BarChart2,
   DollarSign,
-  ArrowRight,
+  User,
+  LogIn,
+  Plus,
 } from "lucide-react";
 
 export default function DashboardPage() {
+  const { user, loading } = useAuth();
   const [activeTab, setActiveTab] = useState<"reading" | "bookmarks" | "works" | "analytics" | "earnings">("reading");
 
   const myPublishedWork = MOCK_WORKS[0];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0f0f11] text-zinc-100 flex flex-col">
+        <Navbar />
+        <main className="flex-1 max-w-6xl mx-auto px-4 py-24 text-center">
+          <div className="w-8 h-8 border-2 border-zinc-500 border-t-white rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-xs text-zinc-400 font-mono">Loading your account...</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#0f0f11] text-zinc-100 flex flex-col">
+        <Navbar />
+        <main className="flex-1 max-w-md mx-auto px-4 py-24 text-center space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-[#161619] border border-[#27272d] flex items-center justify-center mx-auto text-zinc-400">
+            <User className="w-6 h-6" />
+          </div>
+          <h1 className="text-lg font-bold text-white">Sign In Required</h1>
+          <p className="text-xs text-zinc-400 leading-relaxed">
+            Please sign in or create an account to access your personal reading library, bookmarks, and creator studio.
+          </p>
+          <div className="pt-2 flex justify-center gap-3">
+            <Link
+              href="/login"
+              className="px-4 py-2 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+            >
+              <LogIn className="w-3.5 h-3.5" /> Sign in
+            </Link>
+            <Link
+              href="/register"
+              className="px-4 py-2 rounded-lg bg-[#222227] hover:bg-[#2b2b33] border border-[#31313a] text-zinc-200 text-xs font-medium transition-colors"
+            >
+              Create Account
+            </Link>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0f0f11] text-zinc-100 flex flex-col selection:bg-zinc-700">
       <Navbar />
 
       <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* User Profile Card */}
+        {/* Real User Profile Card */}
         <div className="p-6 rounded-2xl bg-[#161619] border border-[#27272d] flex flex-col sm:flex-row sm:items-center justify-between gap-5">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-zinc-700 flex items-center justify-center text-lg font-bold text-white font-mono">
-              N
+            <div className="w-12 h-12 rounded-xl bg-zinc-700 flex items-center justify-center text-lg font-bold text-white font-mono uppercase">
+              {user.displayName.charAt(0)}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-lg font-bold text-white">Naman Jain</h1>
+                <h1 className="text-lg font-bold text-white">{user.displayName}</h1>
                 <span className="px-2 py-0.5 rounded bg-[#222227] text-zinc-400 border border-[#2f2f36] text-[10px] font-mono">
-                  Creator & Reader
+                  Member
                 </span>
               </div>
-              <p className="text-xs text-zinc-400 mt-0.5 font-mono">@namanjain • Joined October 2026</p>
+              <p className="text-xs text-zinc-400 mt-0.5 font-mono">@{user.username} • {user.email}</p>
             </div>
           </div>
 
-          <Link
-            href="/create"
-            className="px-4 py-2 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-semibold text-xs flex items-center gap-1.5 transition-colors self-start sm:self-auto"
-          >
-            <PenTool className="w-3.5 h-3.5" /> Publish New Chapter
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/create"
+              className="px-4 py-2 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-semibold text-xs flex items-center gap-1.5 transition-colors self-start sm:self-auto"
+            >
+              <Plus className="w-3.5 h-3.5" /> New Story / Series
+            </Link>
+          </div>
         </div>
 
         {/* Dashboard Tab Navigation */}
@@ -67,7 +118,7 @@ export default function DashboardPage() {
               activeTab === "bookmarks" ? "bg-[#222227] text-white" : "text-zinc-400 hover:text-zinc-200"
             }`}
           >
-            Bookmarks (4)
+            Bookmarks ({user._count?.bookmarks ?? 4})
           </button>
 
           <button
@@ -76,7 +127,7 @@ export default function DashboardPage() {
               activeTab === "works" ? "bg-[#222227] text-white" : "text-zinc-400 hover:text-zinc-200"
             }`}
           >
-            My Works & Drafts (1)
+            My Works & Drafts ({user._count?.works ?? 1})
           </button>
 
           <button

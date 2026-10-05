@@ -2,22 +2,24 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 import {
   BookOpen,
-  Compass,
-  Layers,
-  Trophy,
   PenTool,
   Search,
   Bell,
   Bookmark,
+  LogOut,
   User,
   Menu,
   X,
+  LogIn,
 } from "lucide-react";
 
 export default function Navbar() {
+  const { user, logout, loading } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   return (
@@ -73,7 +75,7 @@ export default function Navbar() {
             />
           </div>
 
-          {/* Right Action Icons & Write CTA */}
+          {/* Right Action Icons & Live Auth */}
           <div className="flex items-center gap-3">
             {/* Write CTA Button */}
             <Link
@@ -84,36 +86,94 @@ export default function Navbar() {
               <span>Write</span>
             </Link>
 
-            {/* Notifications */}
-            <button
-              aria-label="Notifications"
-              className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-colors relative"
-            >
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-amber-500 rounded-full" />
-            </button>
+            {user ? (
+              <>
+                {/* Bookmarks */}
+                <Link
+                  href="/dashboard?tab=bookmarks"
+                  aria-label="Bookmarks"
+                  className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-colors hidden sm:block"
+                >
+                  <Bookmark className="w-4 h-4" />
+                </Link>
 
-            {/* Bookmarks */}
-            <Link
-              href="/dashboard?tab=bookmarks"
-              aria-label="Bookmarks"
-              className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-colors hidden sm:block"
-            >
-              <Bookmark className="w-4 h-4" />
-            </Link>
+                {/* Notifications */}
+                <button
+                  aria-label="Notifications"
+                  className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-colors relative"
+                >
+                  <Bell className="w-4 h-4" />
+                  <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-amber-500 rounded-full" />
+                </button>
 
-            {/* Unified User Profile Button */}
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-2 p-1.5 pl-2.5 pr-3 bg-[#17171a] border border-[#2c2c32] hover:border-zinc-600 rounded-lg transition-colors group"
-            >
-              <div className="w-5 h-5 rounded-md bg-zinc-700 flex items-center justify-center text-[10px] font-bold text-white">
-                N
+                {/* Logged-In User Profile Menu */}
+                <div className="relative">
+                  <button
+                    onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                    className="flex items-center gap-2 p-1.5 pl-2.5 pr-3 bg-[#17171a] border border-[#2c2c32] hover:border-zinc-600 rounded-lg transition-colors"
+                  >
+                    <div className="w-5 h-5 rounded-md bg-zinc-700 flex items-center justify-center text-[10px] font-bold text-white uppercase font-mono">
+                      {user.displayName.charAt(0)}
+                    </div>
+                    <span className="text-xs font-medium text-zinc-200 max-w-[100px] truncate hidden md:inline">
+                      {user.displayName}
+                    </span>
+                  </button>
+
+                  {userDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-[#161619] border border-[#27272d] rounded-xl shadow-2xl py-1.5 z-50 text-xs animate-in fade-in zoom-in-95 duration-150">
+                      <div className="px-3 py-2 border-b border-[#27272d]">
+                        <p className="font-semibold text-white truncate">{user.displayName}</p>
+                        <p className="text-[11px] text-zinc-400 truncate">@{user.username}</p>
+                      </div>
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 text-zinc-300 hover:text-white hover:bg-[#222227] transition-colors"
+                      >
+                        <User className="w-3.5 h-3.5 text-zinc-400" />
+                        <span>My Dashboard</span>
+                      </Link>
+                      <Link
+                        href="/create"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 text-zinc-300 hover:text-white hover:bg-[#222227] transition-colors"
+                      >
+                        <PenTool className="w-3.5 h-3.5 text-zinc-400" />
+                        <span>Author Studio</span>
+                      </Link>
+                      <div className="border-t border-[#27272d] my-1" />
+                      <button
+                        onClick={() => {
+                          setUserDropdownOpen(false);
+                          logout();
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-rose-400 hover:text-rose-300 hover:bg-[#222227] transition-colors text-left"
+                      >
+                        <LogOut className="w-3.5 h-3.5" />
+                        <span>Sign out</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : !loading ? (
+              /* Logged-Out Actions */
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/login"
+                  className="px-3 py-1.5 text-xs font-medium text-zinc-300 hover:text-white transition-colors"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  href="/register"
+                  className="px-3 py-1.5 rounded-lg bg-[#222227] hover:bg-[#2b2b33] border border-[#31313a] text-xs font-semibold text-zinc-200 transition-colors hidden sm:inline-block"
+                >
+                  Get Started
+                </Link>
               </div>
-              <span className="text-xs font-medium text-zinc-300 group-hover:text-white hidden md:inline">
-                My Space
-              </span>
-            </Link>
+            ) : null}
 
             {/* Mobile menu toggle */}
             <button
@@ -160,13 +220,23 @@ export default function Navbar() {
             >
               Rankings
             </Link>
-            <Link
-              href="/dashboard"
-              onClick={() => setMobileMenuOpen(false)}
-              className="p-2.5 rounded-lg bg-[#0f0f11] text-zinc-200"
-            >
-              Dashboard
-            </Link>
+            {user ? (
+              <Link
+                href="/dashboard"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2.5 rounded-lg bg-[#0f0f11] text-zinc-200"
+              >
+                Dashboard
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2.5 rounded-lg bg-[#0f0f11] text-zinc-200 font-semibold"
+              >
+                Sign in
+              </Link>
+            )}
           </div>
         </div>
       )}
