@@ -2,9 +2,8 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BookCard from "@/components/BookCard";
-import { MOCK_WORKS } from "@/lib/mock-data";
+import { getPublishedWorks } from "@/lib/works-service";
 import {
-  TrendingUp,
   Star,
   BookOpen,
   ArrowRight,
@@ -13,13 +12,15 @@ import {
   Compass,
   PenTool,
   Clock,
-  ShieldCheck,
+  Flame,
 } from "lucide-react";
 
-export default function HomePage() {
-  const featuredWork = MOCK_WORKS[0];
-  const mangaWorks = MOCK_WORKS.filter((w) => w.type === "MANGA" || w.type === "COMIC");
-  const novelWorks = MOCK_WORKS.filter((w) => w.type === "NOVEL" || w.type === "LIGHT_NOVEL" || w.type === "SHORT_STORY");
+export default async function HomePage() {
+  const allWorks = await getPublishedWorks({ limit: 12 });
+
+  const featuredWork = allWorks[0];
+  const recentlyUploaded = allWorks.slice(0, 4);
+  const mangaWorks = allWorks.filter((w) => w.type === "MANGA" || w.type === "COMIC");
 
   const genresList = [
     { name: "Fantasy", count: "1,420 works" },
@@ -89,74 +90,80 @@ export default function HomePage() {
               </div>
 
               {/* Right Column: Featured Serial Card */}
-              <div className="lg:col-span-5">
-                <div className="bg-[#1a1a1e] border border-[#2f2f37] rounded-xl p-5 space-y-4">
-                  <div className="flex items-center justify-between text-xs font-mono">
-                    <span className="text-zinc-400">#1 Trending Serial</span>
-                    <span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 text-[10px]">
-                      Members First
-                    </span>
-                  </div>
-
-                  <div className="relative aspect-[16/9] rounded-lg overflow-hidden bg-black">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={featuredWork.coverUrl!}
-                      alt={featuredWork.title}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                    <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between text-xs font-mono">
-                      <div className="flex items-center gap-1 bg-black/80 px-2 py-0.5 rounded text-amber-400 font-bold">
-                        <Star className="w-3 h-3 fill-current" /> {featuredWork.averageRating}
-                      </div>
-                      <span className="bg-black/80 px-2 py-0.5 rounded text-zinc-300 text-[10px]">
-                        {featuredWork.chapterCount} Chapters
+              {featuredWork && (
+                <div className="lg:col-span-5">
+                  <div className="bg-[#1a1a1e] border border-[#2f2f37] rounded-xl p-5 space-y-4">
+                    <div className="flex items-center justify-between text-xs font-mono">
+                      <span className="text-zinc-400">Featured Release</span>
+                      <span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 text-[10px]">
+                        {featuredWork.type.replace("_", " ")}
                       </span>
                     </div>
-                  </div>
 
-                  <div>
-                    <h3 className="font-semibold text-base text-white">
-                      {featuredWork.title}
-                    </h3>
-                    <p className="text-xs text-zinc-400 mt-1 line-clamp-2 leading-relaxed">
-                      {featuredWork.description}
-                    </p>
-                  </div>
+                    <div className="relative aspect-[16/9] rounded-lg overflow-hidden bg-black">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={featuredWork.coverUrl!}
+                        alt={featuredWork.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                      <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between text-xs font-mono">
+                        <div className="flex items-center gap-1 bg-black/80 px-2 py-0.5 rounded text-amber-400 font-bold">
+                          <Star className="w-3 h-3 fill-current" /> {featuredWork.averageRating}
+                        </div>
+                        <span className="bg-black/80 px-2 py-0.5 rounded text-zinc-300 text-[10px]">
+                          {featuredWork.chapterCount} Chapters
+                        </span>
+                      </div>
+                    </div>
 
-                  <Link
-                    href={`/work/${featuredWork.slug}`}
-                    className="w-full py-2 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors"
-                  >
-                    <span>Read First Chapter</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
+                    <div>
+                      <h3 className="font-semibold text-base text-white">
+                        {featuredWork.title}
+                      </h3>
+                      <p className="text-xs text-zinc-400 mt-1 line-clamp-2 leading-relaxed">
+                        {featuredWork.description}
+                      </p>
+                    </div>
+
+                    <Link
+                      href={`/work/${featuredWork.slug}`}
+                      className="w-full py-2 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors"
+                    >
+                      <span>Read Story</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </section>
 
-        {/* Quick Resume Bar */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="p-4 rounded-xl bg-[#161619] border border-[#27272d] flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <div className="w-8 h-8 rounded-lg bg-[#222227] flex items-center justify-center text-zinc-300 shrink-0">
-                <BookOpen className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-mono font-semibold">Reading Progress</span>
-                <p className="text-xs sm:text-sm font-medium text-zinc-200 truncate">{featuredWork.title} — Chapter 1</p>
-              </div>
+        {/* Recently Uploaded Works Section */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#27272d]">
+            <div>
+              <h2 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+                <Clock className="w-4 h-4 text-zinc-400" />
+                Recently Uploaded & Updated
+              </h2>
+              <p className="text-xs text-zinc-400">Fresh serialized chapters from community creators</p>
             </div>
 
             <Link
-              href={`/read/${featuredWork.id}/ch-1`}
-              className="w-full sm:w-auto px-4 py-1.5 rounded-lg bg-[#24242a] hover:bg-[#2e2e36] text-xs font-medium text-zinc-200 transition-colors text-center shrink-0 border border-[#31313a]"
+              href="/discover?sort=latest"
+              className="text-xs font-medium text-zinc-400 hover:text-white flex items-center gap-1"
             >
-              Resume Reading (65%)
+              View All <ArrowRight className="w-3 h-3" />
             </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {recentlyUploaded.map((work) => (
+              <BookCard key={work.id} work={work} />
+            ))}
           </div>
         </section>
 
@@ -164,10 +171,11 @@ export default function HomePage() {
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-[#27272d]">
             <div>
-              <h2 className="text-lg font-bold text-white tracking-tight">
-                Trending Serials & Stories
+              <h2 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+                <Flame className="w-4 h-4 text-amber-500" />
+                Trending Stories & Serials
               </h2>
-              <p className="text-xs text-zinc-400">Updated hourly based on reader completion and activity</p>
+              <p className="text-xs text-zinc-400">Ranked by reader completion rate and follower velocity</p>
             </div>
 
             <Link
@@ -179,7 +187,7 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {MOCK_WORKS.map((work) => (
+            {allWorks.map((work) => (
               <BookCard key={work.id} work={work} />
             ))}
           </div>
@@ -189,7 +197,8 @@ export default function HomePage() {
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-[#27272d]">
             <div>
-              <h2 className="text-lg font-bold text-white tracking-tight">
+              <h2 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+                <Zap className="w-4 h-4 text-zinc-400" />
                 Manga & Webcomics
               </h2>
               <p className="text-xs text-zinc-400">Sequential art with vertical scroll and page-by-page modes</p>
@@ -204,7 +213,7 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {mangaWorks.concat(MOCK_WORKS.slice(0, 1)).map((work, idx) => (
+            {(mangaWorks.length > 0 ? mangaWorks : allWorks.slice(0, 3)).map((work, idx) => (
               <BookCard key={`${work.id}-${idx}`} work={work} aspectRatio="wide" />
             ))}
           </div>
@@ -214,10 +223,11 @@ export default function HomePage() {
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-[#27272d]">
             <div>
-              <h2 className="text-lg font-bold text-white tracking-tight">
+              <h2 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+                <Layers className="w-4 h-4 text-zinc-400" />
                 Browse Genres
               </h2>
-              <p className="text-xs text-zinc-400">Find your next obsession by category</p>
+              <p className="text-xs text-zinc-400">Find stories by category</p>
             </div>
 
             <Link

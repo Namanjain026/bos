@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import {
   BookOpen,
@@ -13,14 +14,23 @@ import {
   User,
   Menu,
   X,
-  LogIn,
 } from "lucide-react";
 
 export default function Navbar() {
   const { user, logout, loading } = useAuth();
+  const router = useRouter();
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/discover?q=${encodeURIComponent(searchQuery.trim())}`);
+      setMobileMenuOpen(false);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-[#0f0f11]/95 border-b border-[#24242a] backdrop-blur-md transition-colors">
@@ -64,7 +74,7 @@ export default function Navbar() {
           </nav>
 
           {/* Search Bar */}
-          <div className="hidden lg:flex flex-1 max-w-sm relative">
+          <form onSubmit={handleSearchSubmit} className="hidden lg:flex flex-1 max-w-sm relative">
             <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
@@ -73,7 +83,7 @@ export default function Navbar() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-3 py-1.5 bg-[#17171a] border border-[#2c2c32] text-xs text-zinc-200 placeholder-zinc-400 rounded-lg focus:outline-none focus:border-zinc-500 transition-colors"
             />
-          </div>
+          </form>
 
           {/* Right Action Icons & Live Auth */}
           <div className="flex items-center gap-3">
@@ -190,14 +200,16 @@ export default function Navbar() {
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-[#17171a] border-b border-[#2c2c32] px-4 pt-3 pb-5 space-y-3">
-          <div className="relative">
+          <form onSubmit={handleSearchSubmit} className="relative">
             <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Search by title, author..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-4 py-2 bg-[#0f0f11] border border-[#2c2c32] text-xs text-zinc-200 rounded-lg"
             />
-          </div>
+          </form>
           <div className="grid grid-cols-2 gap-2 pt-2 text-xs">
             <Link
               href="/discover"
