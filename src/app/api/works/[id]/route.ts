@@ -29,8 +29,10 @@ export async function GET(request: Request, { params }: RouteParams) {
   try {
     const { id } = await params;
 
-    const work = await db.work.findUnique({
-      where: { id },
+    const work = await db.work.findFirst({
+      where: {
+        OR: [{ id }, { slug: id }],
+      },
       include: {
         creator: {
           select: { id: true, username: true, displayName: true, avatarUrl: true },

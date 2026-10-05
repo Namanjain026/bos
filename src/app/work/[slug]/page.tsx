@@ -1,9 +1,10 @@
+"use client";
+
+import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { MOCK_WORKS } from "@/lib/mock-data";
-import db from "@/lib/db";
-import { notFound } from "next/navigation";
 import {
   Star,
   BookOpen,
@@ -12,6 +13,7 @@ import {
   Heart,
   ArrowRight,
   CheckCircle2,
+  Share2,
 } from "lucide-react";
 
 interface WorkPageProps {
@@ -20,63 +22,90 @@ interface WorkPageProps {
   }>;
 }
 
-export default async function WorkPage({ params }: WorkPageProps) {
-  const { slug } = await params;
+export default function WorkPage({ params }: WorkPageProps) {
+  const { slug } = use(params);
 
-  // Try fetching from live Supabase database first
-  let dbWork = null;
-  try {
-    dbWork = await db.work.findFirst({
-      where: { OR: [{ slug }, { id: slug }] },
-      include: {
-        creator: {
-          select: { id: true, username: true, displayName: true, avatarUrl: true },
-        },
-        chapters: {
-          orderBy: { chapterNumber: "asc" },
-        },
-        genres: { include: { genre: true } },
-      },
-    });
-  } catch (err) {
-    console.error("Failed to query db for work:", err);
+  const [work, setWork] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [bookmarked, setBookmarked] = useState(false);
+  const [following, setFollowing] = useState(false);
+
+  useEffect(() => {
+    // 1. First check if it's in our mock catalogue
+    const mockMatch = MOCK_WORKS.find((w) => w.slug === slug || w.id === slug);
+
+    // 2. Fetch from live API
+    fetch(`/api/works/${slug}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.work) {
+          const dbWork = data.work;
+          setWork({
+            id: dbWork.id,
+            title: dbWork.title,
+            slug: dbWork.slug,
+            description: dbWork.description,
+            synopsisLong: dbWork.description,
+            coverUrl: dbWork.coverUrl || "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80",
+            type: dbWork.type,
+            ageRating: dbWork.ageRating,
+            language: dbWork.language,
+            creator: dbWork.creator || { displayName: "Author", username: "author" },
+            genres: dbWork.genres ? dbWork.genres.map((g: any) => g.genre.name) : ["Fantasy"],
+            averageRating: 5.0,
+            ratingCount: 1,
+            chapterCount: dbWork.chapters ? dbWork.chapters.length : 0,
+            updatedAt: "Recently",
+            chaptersList: dbWork.chapters
+              ? dbWork.chapters.map((ch: any) => ({
+                  id: ch.id,
+                  chapterNumber: ch.chapterNumber,
+                  title: ch.title,
+                  wordCount: ch.wordCount,
+                  isMembersOnly: ch.isMembersOnly,
+                  releasedAt: ch.createdAt ? ch.createdAt.split("T")[0] : "Today",
+                  publicAt: ch.publicAt ? "In a few days" : undefined,
+                }))
+              : [],
+          });
+        } else if (mockMatch) {
+          setWork(mockMatch);
+        }
+      })
+      .catch(() => {
+        if (mockMatch) setWork(mockMatch);
+      })
+      .finally(() => setLoading(false));
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0f0f11] text-zinc-100 flex flex-col">
+        <Navbar />
+        <main className="flex-1 max-w-6xl mx-auto px-4 py-24 text-center">
+          <div className="w-8 h-8 border-2 border-zinc-500 border-t-white rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-xs text-zinc-400 font-mono">Loading story...</p>
+        </main>
+        <Footer />
+      </div>
+    );
   }
 
-  // Fallback to mock works if not in DB
-  const mockWork = MOCK_WORKS.find((w) => w.slug === slug || w.id === slug);
-
-  if (!dbWork && !mockWork) {
-    notFound();
+  if (!work) {
+    return (
+      <div className="min-h-screen bg-[#0f0f11] text-zinc-100 flex flex-col">
+        <Navbar />
+        <main className="flex-1 max-w-md mx-auto px-4 py-24 text-center space-y-4">
+          <h1 className="text-lg font-bold text-white">Story Not Found</h1>
+          <p className="text-xs text-zinc-400">The requested story could not be located.</p>
+          <Link href="/discover" className="inline-block px-4 py-2 rounded-lg bg-zinc-100 text-zinc-950 font-semibold text-xs">
+            Back to Discover
+          </Link>
+        </main>
+        <Footer />
+      </div>
+    );
   }
-
-  const work = dbWork
-    ? {
-        id: dbWork.id,
-        title: dbWork.title,
-        slug: dbWork.slug,
-        description: dbWork.description,
-        synopsisLong: dbWork.description,
-        coverUrl: dbWork.coverUrl || "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80",
-        type: dbWork.type,
-        ageRating: dbWork.ageRating,
-        language: dbWork.language,
-        creator: dbWork.creator,
-        genres: dbWork.genres.map((g) => g.genre.name),
-        averageRating: 5.0,
-        ratingCount: 1,
-        chapterCount: dbWork.chapters.length,
-        updatedAt: "Recently",
-        chaptersList: dbWork.chapters.map((ch) => ({
-          id: ch.id,
-          chapterNumber: ch.chapterNumber,
-          title: ch.title,
-          wordCount: ch.wordCount,
-          isMembersOnly: ch.isMembersOnly,
-          releasedAt: ch.createdAt.toISOString().split("T")[0],
-          publicAt: ch.publicAt ? `In ${Math.ceil((ch.publicAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24))} days` : undefined,
-        })),
-      }
-    : mockWork!;
 
   return (
     <div className="min-h-screen bg-[#0f0f11] text-zinc-100 flex flex-col selection:bg-zinc-700">
@@ -123,11 +152,15 @@ export default async function WorkPage({ params }: WorkPageProps) {
                 )}
 
                 <button
-                  onClick={() => alert("Added to your reading bookmarks.")}
-                  className="w-full py-2 rounded-lg bg-[#222227] hover:bg-[#2a2a30] border border-[#31313a] text-xs font-medium text-zinc-300 flex items-center justify-center gap-2 transition-colors"
+                  onClick={() => setBookmarked(!bookmarked)}
+                  className={`w-full py-2 rounded-lg border text-xs font-medium flex items-center justify-center gap-2 transition-colors ${
+                    bookmarked
+                      ? "bg-amber-950/40 border-amber-800 text-amber-300"
+                      : "bg-[#222227] hover:bg-[#2a2a30] border-[#31313a] text-zinc-300"
+                  }`}
                 >
                   <Bookmark className="w-3.5 h-3.5" />
-                  <span>Add to Library</span>
+                  <span>{bookmarked ? "Saved in Library" : "Add to Library"}</span>
                 </button>
               </div>
             </div>
@@ -152,7 +185,7 @@ export default async function WorkPage({ params }: WorkPageProps) {
                 {/* Creator Attribution */}
                 <div className="flex flex-wrap items-center gap-3 pt-1">
                   <div className="flex items-center gap-2">
-                    {work.creator.avatarUrl ? (
+                    {work.creator?.avatarUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={work.creator.avatarUrl}
@@ -161,14 +194,22 @@ export default async function WorkPage({ params }: WorkPageProps) {
                       />
                     ) : (
                       <div className="w-6 h-6 rounded-full bg-zinc-700 flex items-center justify-center text-[10px] font-bold text-white uppercase font-mono">
-                        {work.creator.displayName.charAt(0)}
+                        {(work.creator?.displayName || "A").charAt(0)}
                       </div>
                     )}
-                    <span className="text-xs text-zinc-300">{work.creator.displayName}</span>
+                    <span className="text-xs text-zinc-300">{work.creator?.displayName || "Author"}</span>
                   </div>
 
-                  <button className="px-3 py-1 rounded-md bg-[#222227] border border-[#31313a] hover:bg-[#2b2b33] text-zinc-300 text-xs font-medium flex items-center gap-1.5 transition-colors">
-                    <Heart className="w-3 h-3 text-rose-400" /> Follow Author
+                  <button
+                    onClick={() => setFollowing(!following)}
+                    className={`px-3 py-1 rounded-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${
+                      following
+                        ? "bg-rose-950/40 border-rose-800 text-rose-300"
+                        : "bg-[#222227] border-[#31313a] hover:bg-[#2b2b33] text-zinc-300"
+                    }`}
+                  >
+                    <Heart className={`w-3 h-3 ${following ? "fill-rose-400 text-rose-400" : "text-rose-400"}`} />
+                    <span>{following ? "Following" : "Follow Author"}</span>
                   </button>
 
                   <Link
@@ -211,7 +252,7 @@ export default async function WorkPage({ params }: WorkPageProps) {
               {/* Genres */}
               <div className="space-y-1.5 pt-1">
                 <div className="flex flex-wrap gap-1.5">
-                  {work.genres.map((g) => (
+                  {work.genres?.map((g: string) => (
                     <Link
                       key={g}
                       href={`/discover?genre=${encodeURIComponent(g)}`}
@@ -236,7 +277,7 @@ export default async function WorkPage({ params }: WorkPageProps) {
 
           <div className="space-y-2">
             {work.chaptersList.length > 0 ? (
-              work.chaptersList.map((ch) => (
+              work.chaptersList.map((ch: any) => (
                 <div
                   key={ch.id}
                   className="p-3.5 rounded-xl bg-[#161619] border border-[#27272d] hover:border-[#383842] transition-colors flex items-center justify-between gap-4"
