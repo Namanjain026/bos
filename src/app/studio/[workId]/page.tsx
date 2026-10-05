@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useAuth } from "@/context/AuthContext";
 import { MOCK_WORKS } from "@/lib/mock-data";
 import Link from "next/link";
 import {
@@ -18,6 +19,7 @@ import {
   SlidersHorizontal,
   Settings,
   Loader2,
+  ShieldAlert,
 } from "lucide-react";
 import { AICritiqueFeedback } from "@/lib/ai-critique";
 
@@ -29,6 +31,7 @@ interface StudioWorkPageProps {
 
 export default function StudioWorkManagementPage({ params }: StudioWorkPageProps) {
   const { workId } = use(params);
+  const { user, loading: authLoading } = useAuth();
   const mockWork = MOCK_WORKS.find((w) => w.id === workId) || MOCK_WORKS[0];
 
   const [activeTab, setActiveTab] = useState<"chapters" | "settings" | "editor">("chapters");
@@ -287,6 +290,67 @@ export default function StudioWorkManagementPage({ params }: StudioWorkPageProps
       setIsAnalyzing(false);
     }, 1000);
   };
+
+  if (!authLoading && !loading) {
+    if (!user) {
+      return (
+        <div className="min-h-screen bg-[#0f0f11] text-zinc-100 flex flex-col">
+          <Navbar />
+          <main className="flex-1 max-w-md mx-auto px-4 py-24 text-center space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-[#1c1c22] border border-[#2d2d38] flex items-center justify-center mx-auto text-amber-400">
+              <Lock className="w-6 h-6" />
+            </div>
+            <h1 className="text-lg font-bold text-white">Sign In Required</h1>
+            <p className="text-xs text-zinc-400 leading-relaxed">
+              You need to be signed in to manage stories and edit manuscripts in Creator Studio.
+            </p>
+            <div className="pt-2">
+              <Link
+                href="/login"
+                className="px-5 py-2.5 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-semibold text-xs inline-block transition-colors"
+              >
+                Sign In
+              </Link>
+            </div>
+          </main>
+          <Footer />
+        </div>
+      );
+    }
+
+    // If work exists in DB and creatorId does not match current logged-in user
+    if (workData?.creatorId && workData.creatorId !== user.id) {
+      return (
+        <div className="min-h-screen bg-[#0f0f11] text-zinc-100 flex flex-col">
+          <Navbar />
+          <main className="flex-1 max-w-md mx-auto px-4 py-24 text-center space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-rose-950/50 border border-rose-900 flex items-center justify-center mx-auto text-rose-400">
+              <ShieldAlert className="w-6 h-6" />
+            </div>
+            <h1 className="text-lg font-bold text-white">Access Denied</h1>
+            <p className="text-xs text-zinc-300 leading-relaxed">
+              You do not have permission to edit <strong>&quot;{title}&quot;</strong>. This story was published by another creator account (@{workData.creator?.username || "author"}).
+            </p>
+            <div className="pt-3 flex items-center justify-center gap-2">
+              <Link
+                href="/dashboard"
+                className="px-4 py-2 rounded-lg bg-[#222227] hover:bg-[#2b2b33] border border-[#34343d] text-zinc-200 font-semibold text-xs transition-colors"
+              >
+                My Dashboard
+              </Link>
+              <Link
+                href="/create"
+                className="px-4 py-2 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-semibold text-xs transition-colors"
+              >
+                Create New Story
+              </Link>
+            </div>
+          </main>
+          <Footer />
+        </div>
+      );
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#0f0f11] text-zinc-100 flex flex-col selection:bg-zinc-700">

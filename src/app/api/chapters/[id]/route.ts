@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
 import { z } from "zod";
 
 const updateChapterSchema = z.object({
@@ -54,7 +55,29 @@ export async function GET(request: Request, { params }: RouteParams) {
 // PATCH /api/chapters/[id] - Edit chapter content, title, release rules
 export async function PATCH(request: Request, { params }: RouteParams) {
   try {
+    const session = await getCurrentUser();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized. Please sign in." }, { status: 401 });
+    }
+
     const { id } = await params;
+
+    const existingChapter = await db.chapter.findUnique({
+      where: { id },
+      include: { work: { select: { id: true, creatorId: true } } },
+    });
+
+    if (!existingChapter) {
+      return NextResponse.json({ error: "Chapter not found" }, { status: 404 });
+    }
+
+    if (existingChapter.work.creatorId !== session.userId) {
+      return NextResponse.json(
+        { error: "Forbidden: You are not the author of this work." },
+        { status: 403 }
+      );
+    }
+
     const json = await request.json();
     const data = updateChapterSchema.parse(json);
 
@@ -101,7 +124,29 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 // DELETE /api/chapters/[id] - Archive / delete chapter
 export async function DELETE(request: Request, { params }: RouteParams) {
   try {
+    const session = await getCurrentUser();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized. Please sign in." }, { status: 401 });
+    }
+
     const { id } = await params;
+
+    const existingChapter = await db.chapter.findUnique({
+      where: { id },
+      include: { work: { select: { id: true, creatorId: true } } },
+    });
+
+    if (!existingChapter) {
+      return NextResponse.json({ error: "Chapter not found" }, { status: 404 });
+    }
+
+    if (existingChapter.work.creatorId !== session.userId) {
+      return NextResponse.json(
+        { error: "Forbidden: You are not the author of this work." },
+        { status: 403 }
+      );
+    }
+
     const deletedChapter = await db.chapter.delete({
       where: { id },
     });

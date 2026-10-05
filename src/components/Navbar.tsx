@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -20,9 +20,14 @@ export default function Navbar() {
   const { user, logout, loading } = useAuth();
   const router = useRouter();
 
+  const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,7 +101,7 @@ export default function Navbar() {
               <span>Write</span>
             </Link>
 
-            {user ? (
+            {mounted && user ? (
               <>
                 {/* Bookmarks */}
                 <Link
@@ -167,7 +172,7 @@ export default function Navbar() {
                   )}
                 </div>
               </>
-            ) : !loading ? (
+            ) : mounted && !loading ? (
               /* Logged-Out Actions */
               <div className="flex items-center gap-2">
                 <Link
@@ -183,7 +188,9 @@ export default function Navbar() {
                   Get Started
                 </Link>
               </div>
-            ) : null}
+            ) : (
+              <div className="w-16 h-7" />
+            )}
 
             {/* Mobile menu toggle */}
             <button

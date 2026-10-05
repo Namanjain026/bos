@@ -23,12 +23,12 @@ export default async function HomePage() {
   const mangaWorks = allWorks.filter((w) => w.type === "MANGA" || w.type === "COMIC");
 
   const genresList = [
-    { name: "Fantasy", count: "1,420 works" },
-    { name: "Manga & Comics", count: "890 series" },
-    { name: "Sci-Fi", count: "620 works" },
-    { name: "Horror & Mystery", count: "430 works" },
-    { name: "Light Novels", count: "780 works" },
-    { name: "Short Stories", count: "1,100 pieces" },
+    { name: "Action & Adventure", slug: "action-adventure", count: "1,420 works" },
+    { name: "Fantasy", slug: "fantasy", count: "2,100 works" },
+    { name: "Manga & Comics", slug: "manga-comics", count: "890 series" },
+    { name: "Sci-Fi", slug: "sci-fi", count: "620 works" },
+    { name: "Light Novels", slug: "light-novels", count: "780 works" },
+    { name: "Short Stories", slug: "short-stories", count: "1,100 pieces" },
   ];
 
   return (
@@ -242,7 +242,7 @@ export default async function HomePage() {
             {genresList.map((g) => (
               <Link
                 key={g.name}
-                href={`/discover?genre=${encodeURIComponent(g.name)}`}
+                href={`/genres/${g.slug}`}
                 className="p-3.5 rounded-xl bg-[#161619] hover:bg-[#1f1f24] border border-[#27272d] hover:border-[#3d3d46] transition-colors flex flex-col justify-between h-24"
               >
                 <span className="font-semibold text-xs text-zinc-200">{g.name}</span>

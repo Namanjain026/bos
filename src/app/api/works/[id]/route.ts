@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
 import { z } from "zod";
 
 const updateWorkSchema = z.object({
@@ -60,7 +61,29 @@ export async function GET(request: Request, { params }: RouteParams) {
 // PATCH /api/works/[id] - Edit title, description, genres, age rating, cover, status
 export async function PATCH(request: Request, { params }: RouteParams) {
   try {
+    const session = await getCurrentUser();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized. Please sign in." }, { status: 401 });
+    }
+
     const { id } = await params;
+
+    const existingWork = await db.work.findUnique({
+      where: { id },
+      select: { id: true, creatorId: true },
+    });
+
+    if (!existingWork) {
+      return NextResponse.json({ error: "Work not found" }, { status: 404 });
+    }
+
+    if (existingWork.creatorId !== session.userId) {
+      return NextResponse.json(
+        { error: "Forbidden: You are not the creator of this work." },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const validatedData = updateWorkSchema.parse(body);
 
@@ -104,7 +127,28 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 // DELETE /api/works/[id] - Archive / soft-delete work
 export async function DELETE(request: Request, { params }: RouteParams) {
   try {
+    const session = await getCurrentUser();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized. Please sign in." }, { status: 401 });
+    }
+
     const { id } = await params;
+
+    const existingWork = await db.work.findUnique({
+      where: { id },
+      select: { id: true, creatorId: true },
+    });
+
+    if (!existingWork) {
+      return NextResponse.json({ error: "Work not found" }, { status: 404 });
+    }
+
+    if (existingWork.creatorId !== session.userId) {
+      return NextResponse.json(
+        { error: "Forbidden: You are not the creator of this work." },
+        { status: 403 }
+      );
+    }
 
     const archivedWork = await db.work.update({
       where: { id },

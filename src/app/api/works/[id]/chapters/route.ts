@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import db from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
 import { z } from "zod";
 
 const createChapterSchema = z.object({
@@ -29,7 +30,29 @@ interface RouteParams {
 // POST /api/works/[id]/chapters - Add new chapter to work
 export async function POST(request: Request, { params }: RouteParams) {
   try {
+    const session = await getCurrentUser();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized. Please sign in." }, { status: 401 });
+    }
+
     const { id: workId } = await params;
+
+    const work = await db.work.findUnique({
+      where: { id: workId },
+      select: { id: true, creatorId: true },
+    });
+
+    if (!work) {
+      return NextResponse.json({ error: "Work not found" }, { status: 404 });
+    }
+
+    if (work.creatorId !== session.userId) {
+      return NextResponse.json(
+        { error: "Forbidden: You are not the creator of this work." },
+        { status: 403 }
+      );
+    }
+
     const json = await request.json();
     const data = createChapterSchema.parse(json);
 

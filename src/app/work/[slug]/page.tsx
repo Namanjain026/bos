@@ -4,6 +4,7 @@ import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useAuth } from "@/context/AuthContext";
 import { MOCK_WORKS } from "@/lib/mock-data";
 import {
   Star,
@@ -24,6 +25,7 @@ interface WorkPageProps {
 
 export default function WorkPage({ params }: WorkPageProps) {
   const { slug } = use(params);
+  const { user } = useAuth();
 
   const [work, setWork] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -50,6 +52,7 @@ export default function WorkPage({ params }: WorkPageProps) {
             type: dbWork.type,
             ageRating: dbWork.ageRating,
             language: dbWork.language,
+            creatorId: dbWork.creatorId || dbWork.creator?.id,
             creator: dbWork.creator || { displayName: "Author", username: "author" },
             genres: dbWork.genres ? dbWork.genres.map((g: any) => g.genre.name) : ["Fantasy"],
             averageRating: 5.0,
@@ -107,6 +110,8 @@ export default function WorkPage({ params }: WorkPageProps) {
     );
   }
 
+  const isOwner = Boolean(user && (user.id === work.creatorId || user.id === work.creator?.id));
+
   return (
     <div className="min-h-screen bg-[#0f0f11] text-zinc-100 flex flex-col selection:bg-zinc-700">
       <Navbar />
@@ -141,7 +146,7 @@ export default function WorkPage({ params }: WorkPageProps) {
                     <BookOpen className="w-4 h-4" />
                     <span>Start Reading Ch. 1</span>
                   </Link>
-                ) : (
+                ) : isOwner ? (
                   <Link
                     href={`/studio/${work.id}`}
                     className="w-full py-2.5 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-semibold text-xs flex items-center justify-center gap-2 transition-colors shadow-sm"
@@ -149,6 +154,10 @@ export default function WorkPage({ params }: WorkPageProps) {
                     <BookOpen className="w-4 h-4" />
                     <span>Add Chapter 1 in Studio</span>
                   </Link>
+                ) : (
+                  <div className="w-full py-2 text-center text-xs font-mono text-zinc-500 bg-[#1e1e24] rounded-lg">
+                    No Chapters Yet
+                  </div>
                 )}
 
                 <button
@@ -200,24 +209,28 @@ export default function WorkPage({ params }: WorkPageProps) {
                     <span className="text-xs text-zinc-300">{work.creator?.displayName || "Author"}</span>
                   </div>
 
-                  <button
-                    onClick={() => setFollowing(!following)}
-                    className={`px-3 py-1 rounded-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${
-                      following
-                        ? "bg-rose-950/40 border-rose-800 text-rose-300"
-                        : "bg-[#222227] border-[#31313a] hover:bg-[#2b2b33] text-zinc-300"
-                    }`}
-                  >
-                    <Heart className={`w-3 h-3 ${following ? "fill-rose-400 text-rose-400" : "text-rose-400"}`} />
-                    <span>{following ? "Following" : "Follow Author"}</span>
-                  </button>
+                  {!isOwner && (
+                    <button
+                      onClick={() => setFollowing(!following)}
+                      className={`px-3 py-1 rounded-md border text-xs font-medium flex items-center gap-1.5 transition-colors ${
+                        following
+                          ? "bg-rose-950/40 border-rose-800 text-rose-300"
+                          : "bg-[#222227] border-[#31313a] hover:bg-[#2b2b33] text-zinc-300"
+                      }`}
+                    >
+                      <Heart className={`w-3 h-3 ${following ? "fill-rose-400 text-rose-400" : "text-rose-400"}`} />
+                      <span>{following ? "Following" : "Follow Author"}</span>
+                    </button>
+                  )}
 
-                  <Link
-                    href={`/studio/${work.id}`}
-                    className="px-3 py-1 rounded-md bg-[#222227] border border-[#31313a] hover:bg-[#2b2b33] text-zinc-300 text-xs font-medium flex items-center gap-1.5 transition-colors"
-                  >
-                    <BookOpen className="w-3 h-3" /> Edit in Studio
-                  </Link>
+                  {isOwner && (
+                    <Link
+                      href={`/studio/${work.id}`}
+                      className="px-3 py-1 rounded-md bg-[#222227] border border-[#31313a] hover:bg-[#2b2b33] text-zinc-300 text-xs font-medium flex items-center gap-1.5 transition-colors"
+                    >
+                      <BookOpen className="w-3 h-3" /> Edit in Studio
+                    </Link>
+                  )}
                 </div>
               </div>
 
