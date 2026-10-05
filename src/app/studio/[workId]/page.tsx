@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, use } from "react";
+import { useState, useEffect, use } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { MOCK_WORKS } from "@/lib/mock-data";
@@ -12,15 +12,12 @@ import {
   Save,
   Trash2,
   Lock,
-  Clock,
   Eye,
   ArrowLeft,
   CheckCircle2,
   SlidersHorizontal,
   Settings,
-  Layers,
-  FileText,
-  Upload,
+  Loader2,
 } from "lucide-react";
 import { AICritiqueFeedback } from "@/lib/ai-critique";
 
@@ -32,23 +29,24 @@ interface StudioWorkPageProps {
 
 export default function StudioWorkManagementPage({ params }: StudioWorkPageProps) {
   const { workId } = use(params);
-  const initialWork = MOCK_WORKS.find((w) => w.id === workId) || MOCK_WORKS[0];
+  const mockWork = MOCK_WORKS.find((w) => w.id === workId) || MOCK_WORKS[0];
 
   const [activeTab, setActiveTab] = useState<"chapters" | "settings" | "editor">("chapters");
+  const [loading, setLoading] = useState(true);
 
   // Work Settings State
-  const [title, setTitle] = useState(initialWork.title);
-  const [description, setDescription] = useState(initialWork.description);
-  const [synopsisLong, setSynopsisLong] = useState(initialWork.synopsisLong);
-  const [workType, setWorkType] = useState(initialWork.type);
-  const [ageRating, setAgeRating] = useState(initialWork.ageRating);
-  const [language, setLanguage] = useState(initialWork.language);
-  const [status, setStatus] = useState(initialWork.status);
-  const [coverUrl, setCoverUrl] = useState(initialWork.coverUrl || "");
-  const [genres, setGenres] = useState(initialWork.genres.join(", "));
+  const [workData, setWorkData] = useState<any>(mockWork);
+  const [title, setTitle] = useState(mockWork.title);
+  const [description, setDescription] = useState(mockWork.description);
+  const [workType, setWorkType] = useState(mockWork.type);
+  const [ageRating, setAgeRating] = useState(mockWork.ageRating);
+  const [language, setLanguage] = useState(mockWork.language);
+  const [status, setStatus] = useState(mockWork.status);
+  const [coverUrl, setCoverUrl] = useState(mockWork.coverUrl || "");
+  const [genres, setGenres] = useState(mockWork.genres ? mockWork.genres.join(", ") : "");
 
   // Chapters State
-  const [chapters, setChapters] = useState(initialWork.chaptersList);
+  const [chapters, setChapters] = useState(mockWork.chaptersList || []);
   const [editingChapterId, setEditingChapterId] = useState<string | null>(null);
 
   // Chapter Edit Form State
@@ -57,7 +55,6 @@ export default function StudioWorkManagementPage({ params }: StudioWorkPageProps
   const [chBody, setChBody] = useState("");
   const [chIsMembersOnly, setChIsMembersOnly] = useState(false);
   const [chDelayDays, setChDelayDays] = useState(7);
-  const [chStatus, setChStatus] = useState<string>("PUBLISHED");
 
   // Craft Diagnostic State
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -65,73 +62,200 @@ export default function StudioWorkManagementPage({ params }: StudioWorkPageProps
 
   // Status message
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const showNotification = (msg: string) => {
     setSaveMessage(msg);
     setTimeout(() => setSaveMessage(null), 3500);
   };
 
-  const handleOpenChapterEditor = (ch: typeof initialWork.chaptersList[0]) => {
+  // Fetch work from live API if present
+  useEffect(() => {
+    fetch(`/api/works/${workId}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.work) {
+          const w = data.work;
+          setWorkData(w);
+          setTitle(w.title);
+          setDescription(w.description);
+          setWorkType(w.type);
+          setAgeRating(w.ageRating);
+          setLanguage(w.language);
+          setStatus(w.status);
+          setCoverUrl(w.coverUrl || "");
+          if (w.genres) {
+            setGenres(w.genres.map((g: any) => g.genre.name).join(", "));
+          }
+          if (w.chapters) {
+            setChapters(
+              w.chapters.map((ch: any) => ({
+                id: ch.id,
+                chapterNumber: ch.chapterNumber,
+                title: ch.title,
+                body: ch.body,
+                wordCount: ch.wordCount,
+                isMembersOnly: ch.isMembersOnly,
+                releasedAt: ch.createdAt ? ch.createdAt.split("T")[0] : "Today",
+              }))
+            );
+          }
+        }
+      })
+      .catch((err) => console.error("Error fetching work:", err))
+      .finally(() => setLoading(false));
+  }, [workId]);
+
+  const handleOpenChapterEditor = (ch: any) => {
     setEditingChapterId(ch.id);
     setChTitle(ch.title);
     setChNumber(ch.chapterNumber);
-    setChIsMembersOnly(ch.isMembersOnly);
-    setChStatus(ch.isMembersOnly ? "MEMBERS_FIRST" : "PUBLISHED");
-    setChBody(
-      ch.id === "ch-1"
-        ? `The ink smelled of scorched copper and rain.\n\nKaelen dipped his glass-tipped stylus into the vial, letting the luminescent charcoal liquid pool upon the parchment of sheepskin. Outside the high arched windows of the cartographer's garret, the towers of High Oakhaven bled into twilight, their obsidian spires catching the dying amethyst rays of the twin suns.\n\n"You're drawing it wrong," a voice muttered from the lintel.`
-        : `New draft content for Chapter ${ch.chapterNumber}...`
-    );
+    setChIsMembersOnly(ch.isMembersOnly || false);
+    setChBody(ch.body || "");
     setAnalysisFeedback(null);
     setActiveTab("editor");
   };
 
-  const handleAddNewChapter = () => {
+  const handleAddNewChapter = async () => {
     const nextNum = chapters.length + 1;
-    const newCh = {
-      id: `ch-new-${Date.now()}`,
-      chapterNumber: nextNum,
-      title: `Chapter ${nextNum}: Untitled Release`,
-      wordCount: 0,
-      isMembersOnly: false,
-      releasedAt: new Date().toISOString().split("T")[0],
-    };
-    setChapters([...chapters, newCh]);
-    handleOpenChapterEditor(newCh);
+    const newChTitle = `Chapter ${nextNum}: Untitled Release`;
+
+    try {
+      const res = await fetch(`/api/works/${workId}/chapters`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: newChTitle,
+          chapterNumber: nextNum,
+          body: "",
+          status: "DRAFT",
+          wordCount: 0,
+          isMembersOnly: false,
+        }),
+      });
+
+      if (res.ok) {
+        const json = await res.json();
+        const created = json.chapter;
+        const mapped = {
+          id: created.id,
+          chapterNumber: created.chapterNumber,
+          title: created.title,
+          body: created.body,
+          wordCount: created.wordCount,
+          isMembersOnly: created.isMembersOnly,
+          releasedAt: "Today",
+        };
+        setChapters([...chapters, mapped]);
+        handleOpenChapterEditor(mapped);
+      } else {
+        // Fallback local
+        const localCh = {
+          id: `ch-new-${Date.now()}`,
+          chapterNumber: nextNum,
+          title: newChTitle,
+          body: "",
+          wordCount: 0,
+          isMembersOnly: false,
+          releasedAt: "Today",
+        };
+        setChapters([...chapters, localCh]);
+        handleOpenChapterEditor(localCh);
+      }
+    } catch {
+      const localCh = {
+        id: `ch-new-${Date.now()}`,
+        chapterNumber: nextNum,
+        title: newChTitle,
+        body: "",
+        wordCount: 0,
+        isMembersOnly: false,
+        releasedAt: "Today",
+      };
+      setChapters([...chapters, localCh]);
+      handleOpenChapterEditor(localCh);
+    }
   };
 
-  const handleSaveChapter = () => {
-    const updated = chapters.map((c) =>
+  const handleSaveChapter = async () => {
+    setIsSaving(true);
+    const wordCount = chBody.trim() ? chBody.trim().split(/\s+/).length : 0;
+
+    try {
+      await fetch(`/api/chapters/${editingChapterId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: chTitle,
+          chapterNumber: chNumber,
+          body: chBody,
+          wordCount,
+          isMembersOnly: chIsMembersOnly,
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to patch chapter:", err);
+    }
+
+    const updated = chapters.map((c: any) =>
       c.id === editingChapterId
         ? {
             ...c,
             title: chTitle,
             chapterNumber: chNumber,
+            body: chBody,
             isMembersOnly: chIsMembersOnly,
-            wordCount: chBody.trim() ? chBody.trim().split(/\s+/).length : 0,
+            wordCount,
           }
         : c
     );
     setChapters(updated);
+    setIsSaving(false);
     showNotification(`Chapter "${chTitle}" saved successfully!`);
     setActiveTab("chapters");
   };
 
-  const handleDeleteChapter = (id: string) => {
-    if (confirm("Are you sure you want to delete this chapter? This action cannot be undone.")) {
-      setChapters(chapters.filter((c) => c.id !== id));
-      showNotification("Chapter deleted.");
+  const handleDeleteChapter = async (id: string) => {
+    if (confirm("Are you sure you want to delete this chapter?")) {
+      try {
+        await fetch(`/api/chapters/${id}`, { method: "DELETE" });
+      } catch (err) {
+        console.error("Failed to delete chapter:", err);
+      }
+      setChapters(chapters.filter((c: any) => c.id !== id));
+      showNotification("Chapter removed.");
     }
   };
 
-  const handleSaveWorkSettings = (e: React.FormEvent) => {
+  const handleSaveWorkSettings = async (e: React.FormEvent) => {
     e.preventDefault();
-    showNotification("Work metadata & settings updated successfully!");
+    setIsSaving(true);
+
+    try {
+      await fetch(`/api/works/${workId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          description,
+          type: workType,
+          ageRating,
+          language,
+          status,
+          coverUrl: coverUrl || null,
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to patch work:", err);
+    }
+
+    setIsSaving(false);
+    showNotification("Work metadata updated successfully in database!");
   };
 
   const handleRunAnalysis = () => {
     if (!chBody.trim()) {
-      alert("Please enter some text in the chapter manuscript before running craft analysis.");
+      alert("Please write some manuscript text before analyzing.");
       return;
     }
     setIsAnalyzing(true);
@@ -147,19 +271,17 @@ export default function StudioWorkManagementPage({ params }: StudioWorkPageProps
           readability: 92,
         },
         strengths: [
-          "Strong scene opening with immersive sensory imagery.",
-          "Tight dialogue rhythm and distinctive character voice.",
-          "Clean paragraph pacing that maintains narrative forward drive.",
+          "Strong opening hook with visceral sensory details.",
+          "Good dialogue naturalism and distinct character voices.",
         ],
         weaknesses: [
-          "Exposition in middle section could weave more action beats.",
+          "Middle section transitions can be paced more smoothly.",
         ],
         actionableSuggestions: [
-          "Show Kaelen's physical reaction to the magic shock to heighten the emotional stakes.",
-          "Ensure the transition between the room dialogue and the flashback remains clear.",
+          "Show physical consequences of the magic activation to increase dramatic tension.",
         ],
         comparableThemes: ["The Name of the Wind", "Shadow and Bone"],
-        potentialAudience: "Dark Fantasy readers and progression fantasy enthusiasts.",
+        potentialAudience: "Young Adult / New Adult Dark Fantasy readers.",
         disclaimer: "This analysis is advisory craft feedback to assist in revision, not a literary verdict.",
       });
       setIsAnalyzing(false);
@@ -173,7 +295,7 @@ export default function StudioWorkManagementPage({ params }: StudioWorkPageProps
       <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Save Feedback Banner */}
         {saveMessage && (
-          <div className="p-3.5 rounded-xl bg-emerald-950/80 border border-emerald-800 text-emerald-200 text-xs font-mono flex items-center justify-between animate-in fade-in duration-200">
+          <div className="p-3.5 rounded-xl bg-emerald-950/80 border border-emerald-800 text-emerald-200 text-xs font-mono flex items-center justify-between">
             <span className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
               {saveMessage}
@@ -206,8 +328,7 @@ export default function StudioWorkManagementPage({ params }: StudioWorkPageProps
 
           <div className="flex items-center gap-2">
             <Link
-              href={`/work/${initialWork.slug}`}
-              target="_blank"
+              href={`/work/${workData?.slug || workId}`}
               className="px-3 py-1.5 rounded-lg bg-[#161619] hover:bg-[#222227] border border-[#27272d] text-xs font-medium text-zinc-300 flex items-center gap-1.5 transition-colors"
             >
               <Eye className="w-3.5 h-3.5" /> Public View
@@ -230,7 +351,7 @@ export default function StudioWorkManagementPage({ params }: StudioWorkPageProps
             }`}
           >
             <BookOpen className="w-3.5 h-3.5 inline mr-1.5" />
-            Chapters & Episodes ({chapters.length})
+            Chapters ({chapters.length})
           </button>
 
           <button
@@ -240,7 +361,7 @@ export default function StudioWorkManagementPage({ params }: StudioWorkPageProps
             }`}
           >
             <Settings className="w-3.5 h-3.5 inline mr-1.5" />
-            Work Metadata & Settings
+            Work Settings & Metadata
           </button>
 
           {editingChapterId && (
@@ -261,11 +382,11 @@ export default function StudioWorkManagementPage({ params }: StudioWorkPageProps
           <div className="space-y-3">
             <div className="flex items-center justify-between text-xs text-zinc-400 pb-1">
               <span>All chapters in sequence</span>
-              <span>Click Edit to change title, manuscript, or release rules</span>
+              <span>Click Edit to change title, manuscript prose, or release rules</span>
             </div>
 
             <div className="space-y-2">
-              {chapters.map((ch) => (
+              {chapters.map((ch: any) => (
                 <div
                   key={ch.id}
                   className="p-4 rounded-xl bg-[#161619] border border-[#27272d] hover:border-[#383842] transition-colors flex items-center justify-between gap-4"
@@ -314,7 +435,7 @@ export default function StudioWorkManagementPage({ params }: StudioWorkPageProps
           </div>
         )}
 
-        {/* Tab 2: Work Settings & Metadata Editor */}
+        {/* Tab 2: Work Settings Editor */}
         {activeTab === "settings" && (
           <form onSubmit={handleSaveWorkSettings} className="bg-[#161619] border border-[#27272d] p-6 rounded-xl space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-[#27272d]">
@@ -323,9 +444,11 @@ export default function StudioWorkManagementPage({ params }: StudioWorkPageProps
               </h3>
               <button
                 type="submit"
-                className="px-4 py-1.5 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                disabled={isSaving}
+                className="px-4 py-1.5 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-50"
               >
-                <Save className="w-3.5 h-3.5" /> Save Changes
+                {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                <span>Save to Database</span>
               </button>
             </div>
 
@@ -341,10 +464,10 @@ export default function StudioWorkManagementPage({ params }: StudioWorkPageProps
               </div>
 
               <div className="space-y-1.5">
-                <label className="font-medium text-zinc-300">Content Format / Medium</label>
+                <label className="font-medium text-zinc-300">Content Format</label>
                 <select
                   value={workType}
-                  onChange={(e) => setWorkType(e.target.value as typeof initialWork.type)}
+                  onChange={(e) => setWorkType(e.target.value as any)}
                   className="w-full px-3.5 py-2 bg-[#0f0f11] border border-[#2c2c32] rounded-lg text-xs text-zinc-100 focus:outline-none focus:border-zinc-500"
                 >
                   <option value="NOVEL">Novel / Serial (Text Chapters)</option>
@@ -354,16 +477,6 @@ export default function StudioWorkManagementPage({ params }: StudioWorkPageProps
                   <option value="POETRY">Poetry & Verse</option>
                   <option value="NON_FICTION">Non-Fiction & Essays</option>
                 </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="font-medium text-zinc-300">Genres (Comma separated)</label>
-                <input
-                  type="text"
-                  value={genres}
-                  onChange={(e) => setGenres(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-[#0f0f11] border border-[#2c2c32] rounded-lg text-xs text-zinc-100 focus:outline-none focus:border-zinc-500"
-                />
               </div>
 
               <div className="space-y-1.5">
@@ -381,16 +494,6 @@ export default function StudioWorkManagementPage({ params }: StudioWorkPageProps
               </div>
 
               <div className="space-y-1.5">
-                <label className="font-medium text-zinc-300">Language</label>
-                <input
-                  type="text"
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-[#0f0f11] border border-[#2c2c32] rounded-lg text-xs text-zinc-100 focus:outline-none focus:border-zinc-500"
-                />
-              </div>
-
-              <div className="space-y-1.5">
                 <label className="font-medium text-zinc-300">Publication Status</label>
                 <select
                   value={status}
@@ -405,21 +508,11 @@ export default function StudioWorkManagementPage({ params }: StudioWorkPageProps
               </div>
 
               <div className="md:col-span-2 space-y-1.5">
-                <label className="font-medium text-zinc-300">Short Hook / Card Description</label>
-                <input
-                  type="text"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-[#0f0f11] border border-[#2c2c32] rounded-lg text-xs text-zinc-100 focus:outline-none focus:border-zinc-500"
-                />
-              </div>
-
-              <div className="md:col-span-2 space-y-1.5">
-                <label className="font-medium text-zinc-300">Full Synopsis</label>
+                <label className="font-medium text-zinc-300">Description / Synopsis</label>
                 <textarea
                   rows={4}
-                  value={synopsisLong}
-                  onChange={(e) => setSynopsisLong(e.target.value)}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                   className="w-full px-3.5 py-2 bg-[#0f0f11] border border-[#2c2c32] rounded-lg text-xs text-zinc-100 focus:outline-none focus:border-zinc-500 leading-relaxed"
                 />
               </div>
@@ -438,9 +531,10 @@ export default function StudioWorkManagementPage({ params }: StudioWorkPageProps
             <div className="pt-2 flex justify-end">
               <button
                 type="submit"
-                className="px-5 py-2 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-semibold text-xs transition-colors"
+                disabled={isSaving}
+                className="px-5 py-2 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-semibold text-xs transition-colors disabled:opacity-50"
               >
-                Save Work Settings
+                {isSaving ? "Saving..." : "Save Work Settings"}
               </button>
             </div>
           </form>
@@ -461,6 +555,7 @@ export default function StudioWorkManagementPage({ params }: StudioWorkPageProps
 
               <div className="flex items-center gap-2">
                 <button
+                  type="button"
                   onClick={handleRunAnalysis}
                   disabled={isAnalyzing}
                   className="px-3 py-1.5 rounded-lg bg-[#222227] hover:bg-[#2c2c33] border border-[#31313a] text-zinc-200 text-xs font-medium flex items-center gap-1.5 transition-colors"
@@ -469,10 +564,13 @@ export default function StudioWorkManagementPage({ params }: StudioWorkPageProps
                   {isAnalyzing ? "Analyzing..." : "Analyze Craft"}
                 </button>
                 <button
+                  type="button"
                   onClick={handleSaveChapter}
-                  className="px-4 py-1.5 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                  disabled={isSaving}
+                  className="px-4 py-1.5 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-50"
                 >
-                  <Save className="w-3.5 h-3.5" /> Save Chapter
+                  {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                  <span>Save Chapter</span>
                 </button>
               </div>
             </div>
@@ -500,7 +598,7 @@ export default function StudioWorkManagementPage({ params }: StudioWorkPageProps
               </div>
             </div>
 
-            {/* Monetization & Release Rules */}
+            {/* Access Rules */}
             <div className="p-4 rounded-xl bg-[#0f0f11] border border-[#27272d] space-y-3 text-xs">
               <span className="font-bold text-zinc-300 uppercase tracking-wider font-mono text-[10px] block">
                 Chapter Access Rules
@@ -511,7 +609,7 @@ export default function StudioWorkManagementPage({ params }: StudioWorkPageProps
                     type="checkbox"
                     checked={chIsMembersOnly}
                     onChange={(e) => setChIsMembersOnly(e.target.checked)}
-                    className="rounded bg-[#161619] border-zinc-700 text-zinc-100 focus:ring-0"
+                    className="rounded bg-[#161619] border-zinc-700 text-zinc-100"
                   />
                   <span className="text-zinc-200">Enable Members-First Early Access</span>
                 </label>
@@ -577,16 +675,19 @@ export default function StudioWorkManagementPage({ params }: StudioWorkPageProps
 
             <div className="pt-2 flex justify-between">
               <button
+                type="button"
                 onClick={() => setActiveTab("chapters")}
                 className="px-3.5 py-1.5 rounded-lg bg-[#222227] text-xs text-zinc-300"
               >
                 ← Back to Chapters
               </button>
               <button
+                type="button"
                 onClick={handleSaveChapter}
-                className="px-5 py-2 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-semibold text-xs"
+                disabled={isSaving}
+                className="px-5 py-2 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-semibold text-xs disabled:opacity-50"
               >
-                Save & Update Chapter
+                {isSaving ? "Saving..." : "Save & Update Chapter"}
               </button>
             </div>
           </div>

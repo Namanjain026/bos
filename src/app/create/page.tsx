@@ -3,10 +3,11 @@
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   PenTool,
-  BookOpen,
-  DollarSign,
   Send,
   Save,
   CheckCircle2,
@@ -15,10 +16,15 @@ import {
   Layers,
   Upload,
   SlidersHorizontal,
+  Loader2,
+  LogIn,
 } from "lucide-react";
 import { AICritiqueFeedback } from "@/lib/ai-critique";
 
 export default function CreateStudioPage() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+
   const [activeTab, setActiveTab] = useState<"details" | "editor" | "release" | "analysis">("details");
 
   // Form states
@@ -27,21 +33,85 @@ export default function CreateStudioPage() {
   const [description, setDescription] = useState("");
   const [ageRating, setAgeRating] = useState("TEEN");
   const [genre, setGenre] = useState("Fantasy");
+  const [coverUrl, setCoverUrl] = useState("");
 
   // Chapter editor states
   const [chapterTitle, setChapterTitle] = useState("");
   const [chapterBody, setChapterBody] = useState("");
 
   // Monetization model
-  const [monetizationModel, setMonetizationModel] = useState<"FREE" | "MEMBERS_FIRST" | "PAID">("MEMBERS_FIRST");
+  const [monetizationModel, setMonetizationModel] = useState<"FREE" | "MEMBERS_FIRST" | "PAID">("FREE");
   const [membersFirstDays, setMembersFirstDays] = useState(7);
   const [price, setPrice] = useState("1.99");
+
+  // Publishing action states
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Manuscript Analysis State
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisFeedback, setAnalysisFeedback] = useState<AICritiqueFeedback | null>(null);
 
   const wordCount = chapterBody.trim() ? chapterBody.trim().split(/\s+/).length : 0;
+
+  const handlePublishWork = async (publishStatus: "DRAFT" | "PUBLISHED") => {
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
+    if (!title.trim()) {
+      setErrorMsg("Please provide a title for your story.");
+      setActiveTab("details");
+      return;
+    }
+
+    if (!description.trim()) {
+      setErrorMsg("Please provide a description/synopsis for your story.");
+      setActiveTab("details");
+      return;
+    }
+
+    setErrorMsg(null);
+    setIsSubmitting(true);
+
+    try {
+      const payload = {
+        title,
+        description,
+        type: workType,
+        ageRating,
+        genre,
+        coverUrl: coverUrl.trim() || undefined,
+        status: publishStatus,
+        chapterTitle: chapterTitle.trim() || "Chapter 1",
+        chapterBody: chapterBody.trim() || undefined,
+        isMembersOnly: monetizationModel === "MEMBERS_FIRST",
+        publicDelayDays: membersFirstDays,
+        price: monetizationModel === "PAID" ? parseFloat(price) || 1.99 : null,
+      };
+
+      const res = await fetch("/api/works", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to publish work");
+      }
+
+      // Redirect to studio management page for the created work
+      router.push(`/studio/${data.work.id}`);
+      router.refresh();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to publish work";
+      setErrorMsg(msg);
+      setIsSubmitting(false);
+    }
+  };
 
   const handleRunAnalysis = () => {
     if (!chapterBody.trim()) {
@@ -69,11 +139,11 @@ export default function CreateStudioPage() {
           "High narrative hook that compels the reader to read the next scene.",
         ],
         weaknesses: [
-          "Slight exposition density in paragraph 4 regarding ancient history.",
+          "Slight exposition density in opening paragraph regarding world history.",
           "Protagonist's internal emotional stakes could be introduced earlier.",
         ],
         actionableSuggestions: [
-          "Break up the ley-line explanation by showing a practical spell failure rather than explaining the law.",
+          "Break up the world explanation by showing a practical scene rather than explaining the law.",
           "Add a fleeting sensory detail about the scent of ozone or rain to heighten the magic manifestation scene.",
         ],
         comparableThemes: ["The Name of the Wind", "Shadow and Bone", "Fullmetal Alchemist"],
@@ -84,11 +154,67 @@ export default function CreateStudioPage() {
     }, 1200);
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#0f0f11] text-zinc-100 flex flex-col">
+        <Navbar />
+        <main className="flex-1 max-w-5xl mx-auto px-4 py-24 text-center">
+          <div className="w-8 h-8 border-2 border-zinc-500 border-t-white rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-xs text-zinc-400 font-mono">Loading studio...</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#0f0f11] text-zinc-100 flex flex-col">
+        <Navbar />
+        <main className="flex-1 max-w-md mx-auto px-4 py-24 text-center space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-[#161619] border border-[#27272d] flex items-center justify-center mx-auto text-zinc-400">
+            <PenTool className="w-6 h-6" />
+          </div>
+          <h1 className="text-lg font-bold text-white">Sign In to Publish</h1>
+          <p className="text-xs text-zinc-400 leading-relaxed">
+            Create an account or sign in to draft, edit, and publish your serialized stories to Book of Shades.
+          </p>
+          <div className="pt-2 flex justify-center gap-3">
+            <Link
+              href="/login"
+              className="px-4 py-2 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+            >
+              <LogIn className="w-3.5 h-3.5" /> Sign in
+            </Link>
+            <Link
+              href="/register"
+              className="px-4 py-2 rounded-lg bg-[#222227] hover:bg-[#2b2b33] border border-[#31313a] text-zinc-200 text-xs font-medium transition-colors"
+            >
+              Create Account
+            </Link>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#0f0f11] text-zinc-100 flex flex-col selection:bg-zinc-700">
       <Navbar />
 
       <main className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        {/* Error Banner */}
+        {errorMsg && (
+          <div className="p-3.5 rounded-xl bg-rose-950/80 border border-rose-800 text-rose-200 text-xs font-mono flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+              {errorMsg}
+            </span>
+            <button onClick={() => setErrorMsg(null)} className="opacity-70 hover:opacity-100">✕</button>
+          </div>
+        )}
+
         {/* Studio Top Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#27272d]">
           <div>
@@ -101,23 +227,35 @@ export default function CreateStudioPage() {
               </h1>
             </div>
             <p className="text-xs text-zinc-400 mt-1">
-              Draft, review narrative craft, and publish serialized chapters.
+              Publishing as <strong className="text-zinc-200 font-semibold">{user.displayName}</strong> (@{user.username})
             </p>
           </div>
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => alert("Draft saved locally.")}
-              className="px-3.5 py-1.5 rounded-lg bg-[#1a1a1e] hover:bg-[#242429] border border-[#2c2c33] text-xs font-medium text-zinc-300 flex items-center gap-1.5 transition-colors"
+              onClick={() => handlePublishWork("DRAFT")}
+              disabled={isSubmitting}
+              className="px-3.5 py-1.5 rounded-lg bg-[#1a1a1e] hover:bg-[#242429] border border-[#2c2c33] text-xs font-medium text-zinc-300 flex items-center gap-1.5 transition-colors disabled:opacity-50"
             >
-              <Save className="w-3.5 h-3.5" /> Save Draft
+              <Save className="w-3.5 h-3.5" /> Save as Draft
             </button>
 
             <button
-              onClick={() => alert("Your chapter has been published.")}
-              className="px-4 py-1.5 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+              onClick={() => handlePublishWork("PUBLISHED")}
+              disabled={isSubmitting}
+              className="px-4 py-1.5 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-50"
             >
-              <Send className="w-3.5 h-3.5" /> Publish
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Publishing...</span>
+                </>
+              ) : (
+                <>
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Publish Work</span>
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -143,7 +281,7 @@ export default function CreateStudioPage() {
                 : "text-zinc-400 hover:text-zinc-200"
             }`}
           >
-            2. Chapter Editor ({wordCount} words)
+            2. Chapter 1 Content ({wordCount} words)
           </button>
 
           <button
@@ -176,9 +314,10 @@ export default function CreateStudioPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-zinc-300">Title</label>
+                <label className="text-xs font-medium text-zinc-300">Story Title *</label>
                 <input
                   type="text"
+                  required
                   placeholder="e.g., The Cartographer of Oakhaven"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
@@ -215,6 +354,7 @@ export default function CreateStudioPage() {
                   <option value="Action & Adventure">Action & Adventure</option>
                   <option value="Romance">Romance</option>
                   <option value="Horror & Supernatural">Horror & Supernatural</option>
+                  <option value="Mystery & Detective">Mystery & Detective</option>
                 </select>
               </div>
 
@@ -228,13 +368,26 @@ export default function CreateStudioPage() {
                   <option value="EVERYONE">Everyone (General)</option>
                   <option value="TEEN">Teen (13+)</option>
                   <option value="MATURE">Mature (17+)</option>
+                  <option value="EXPLICIT">Explicit / 18+</option>
                 </select>
               </div>
 
               <div className="md:col-span-2 space-y-1.5">
-                <label className="text-xs font-medium text-zinc-300">Synopsis</label>
+                <label className="text-xs font-medium text-zinc-300">Cover Image URL (Optional)</label>
+                <input
+                  type="text"
+                  placeholder="https://..."
+                  value={coverUrl}
+                  onChange={(e) => setCoverUrl(e.target.value)}
+                  className="w-full px-3.5 py-2 bg-[#0f0f11] border border-[#2c2c32] rounded-lg text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-500 font-mono"
+                />
+              </div>
+
+              <div className="md:col-span-2 space-y-1.5">
+                <label className="text-xs font-medium text-zinc-300">Synopsis / Description *</label>
                 <textarea
                   rows={4}
+                  required
                   placeholder="A clear synopsis of the setting, stakes, and protagonist..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -245,6 +398,7 @@ export default function CreateStudioPage() {
 
             <div className="pt-2 flex justify-end">
               <button
+                type="button"
                 onClick={() => setActiveTab("editor")}
                 className="px-4 py-2 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-semibold text-xs transition-colors"
               >
@@ -258,9 +412,10 @@ export default function CreateStudioPage() {
         {activeTab === "editor" && (
           <div className="bg-[#161619] border border-[#27272d] p-6 rounded-xl space-y-5">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider font-mono">Chapter Content</h3>
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider font-mono">Chapter 1 Content</h3>
               {workType !== "MANGA" && (
                 <button
+                  type="button"
                   onClick={handleRunAnalysis}
                   className="px-3 py-1.5 rounded-lg bg-[#222227] hover:bg-[#2b2b32] border border-[#31313a] text-zinc-200 text-xs font-medium flex items-center gap-1.5 transition-colors"
                 >
@@ -304,12 +459,14 @@ export default function CreateStudioPage() {
 
             <div className="pt-2 flex justify-between">
               <button
+                type="button"
                 onClick={() => setActiveTab("details")}
                 className="px-3.5 py-1.5 rounded-lg bg-[#222227] text-xs text-zinc-300"
               >
                 ← Back
               </button>
               <button
+                type="button"
                 onClick={() => setActiveTab("release")}
                 className="px-4 py-2 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-semibold text-xs"
               >
@@ -378,16 +535,29 @@ export default function CreateStudioPage() {
 
             <div className="pt-2 flex justify-between">
               <button
+                type="button"
                 onClick={() => setActiveTab("editor")}
                 className="px-3.5 py-1.5 rounded-lg bg-[#222227] text-xs text-zinc-300"
               >
                 ← Back
               </button>
               <button
-                onClick={() => setActiveTab("analysis")}
-                className="px-4 py-2 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-semibold text-xs"
+                type="button"
+                onClick={() => handlePublishWork("PUBLISHED")}
+                disabled={isSubmitting}
+                className="px-5 py-2 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-semibold text-xs flex items-center gap-1.5 transition-colors disabled:opacity-50"
               >
-                View Craft Diagnostic →
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Publishing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Publish Work Now</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -404,6 +574,7 @@ export default function CreateStudioPage() {
                 </h3>
               </div>
               <button
+                type="button"
                 onClick={handleRunAnalysis}
                 disabled={isAnalyzing}
                 className="px-3 py-1.5 rounded-lg bg-[#222227] hover:bg-[#2c2c33] border border-[#31313a] text-xs text-zinc-200"
